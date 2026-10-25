@@ -1,6 +1,6 @@
-import { parse } from './engine/music.js';
-import { performance } from './engine/performance.js';
-import { mod, noteNames } from './analysis.js';
+import { parse } from './engine/music.js?v=2.0.0-alpha.2';
+import { performance } from './engine/performance.js?v=2.0.0-alpha.2';
+import { mod, noteNames } from './analysis.js?v=2.0.0-alpha.2';
 
 export const styles = {
   basic: { label: '基本和弦', pattern: 'sustain', qualities: ['', 'm', 'sus2', 'sus4'], voicing: 'close', description: '先建立清楚的三和弦與穩定長音。' },
@@ -45,10 +45,10 @@ export function auditHarmony(melody, accompaniment) {
   return conflicts;
 }
 
-export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: styleId = 'basic', seed = 0, beatsPerBar = 4 } = {}) {
+export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: styleId = 'basic', seed = 0, beatsPerBar = 4, qualities = null, preferred = [] } = {}) {
   validateMelody(melody);
   if (!(beatsPerBar > 0 && beatsPerBar <= 32)) throw Error('不支援這個拍號。');
-  const cfg = styles[styleId] || styles.basic, pool = candidatePool(cfg), rng = random(seed);
+  const cfg = { ...(styles[styleId] || styles.basic), ...(qualities ? { qualities } : {}) }, pool = candidatePool(cfg), rng = random(seed);
   const scale = scaleOf(key), last = Math.max(...melody.map(n => n.end)), totalBeats = Math.ceil(last / beatsPerBar) * beatsPerBar;
   const pieces = [];
   function split(start, end, depth = 0) {
@@ -72,7 +72,10 @@ export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: sty
       const tonic = chord.root === key.root ? (index === 0 || index === pieces.length - 1 ? 1.1 : .3) : 0;
       const stylePreference = cfg.qualities.indexOf(chord.q);
       const color = stylePreference >= 0 ? stylePreference * .06 : 1.2;
-      return { ...chord, cost: outOfKey * 1.1 + (1 - inChord) * 2 + color - tonic + (chord.pcs.length < 3 ? 2.4 : 0) + (styleId === 'basic' ? 0 : rng() * 1.3) };
+      const wanted = preferred.find(s => overlaps(s,piece));
+      const original = wanted && parse(wanted.symbol);
+      const preference = original ? (original.root === chord.root ? -.65 : .2) - chord.pcs.filter(p=>original.pcs.includes(p)).length*.1 : 0;
+      return { ...chord, cost: preference + outOfKey * 1.1 + (1 - inChord) * 2 + color - tonic + (chord.pcs.length < 3 ? 2.4 : 0) + (styleId === 'basic' ? 0 : rng() * 1.3) };
     }).sort((a, b) => a.cost - b.cost).slice(0, 16);
   });
   let costs = scored[0].map(c => c.cost), paths = scored[0].map((_, i) => [i]);

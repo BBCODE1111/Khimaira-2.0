@@ -1,0 +1,132 @@
+/* Cold-blue temple and bronze edition. Musical layout and controls are retained. */
+:root {
+  --bg:#07131f; --panel:#0b1c2de8; --line:#728a9b55;
+  --muted:#b9c9d5; --accent:#b9a078; --paper:#e5ecf1;
+  --bronze:#a18a66; --field:#294459; --glass:#071927df;
+}
+body {background:var(--bg);color:var(--paper);font-family:'DM Sans',sans-serif}
+body::before {background:url('temple-blue.png') center top / cover no-repeat;opacity:1}
+header {
+  height:clamp(150px,16vw,215px);max-width:1360px;margin:auto;
+  align-items:flex-end;padding:24px 32px;background:transparent;border:0;
+}
+.brand {font-family:'Cinzel',Georgia,serif;font-size:30px;letter-spacing:5px;color:#e6e4da}
+.brand img {width:64px;height:64px;object-fit:contain}
+.brand small {color:#c6cdd0;font-size:9px;letter-spacing:3px}
+.header-note {color:#c6d3df;font-size:9px;align-self:flex-start;margin-top:0}
+main {padding-top:0}
+.studio-heading {padding:24px 2px 16px}
+.studio-heading>span {color:#bdcbd6}
+.studio-heading p {color:#e6e4da}
+.studio-heading em {color:#bdcbd6}
+.workflow {color:#bbcbd8}
+.workflow i {color:var(--bronze)}
+.panel {
+  background:var(--panel);border:1px solid var(--line);border-radius:4px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:inset 0 1px #ffffff08,0 8px 28px #020b1433;
+}
+.score {
+  background:var(--glass);border:1px solid #7a94a369;border-bottom-color:var(--bronze);
+  border-radius:4px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.sectionhead h2,.section-label,.harmonic-tools h2 {color:#dfded4}
+.section-label span:last-child,.score-hint,.style-note,label,.original-draft {color:var(--muted)}
+.sectionhead h2 small {color:#c0d0df}
+button:not(.chord-event):not(.bar-cue) {
+  background:#2b4355;border:1px solid var(--bronze);border-radius:2px;color:#e5ecf1;
+  box-shadow:inset 0 0 0 2px #293c4b,inset 0 0 0 3px #b9a07838;
+  font-family:'Cinzel',Georgia,serif;font-weight:600;letter-spacing:1px;
+  transition:background .15s,border-color .15s;
+}
+button:not(.chord-event):not(.bar-cue):hover {
+  background:#3c5c73;border:1px solid #c1ac87;filter:none;
+}
+button.primary:not(.chord-event):not(.bar-cue) {
+  background:#3a5b74;color:#f0f3f6;border-color:#c1ab83;
+  box-shadow:inset 0 0 0 2px #2b4355,inset 0 0 0 3px #c1ab8366;
+}
+button.primary:not(.chord-event):not(.bar-cue):hover {background:#496e88;filter:none}
+button.active:not(.chord-event):not(.bar-cue),
+button[aria-pressed=true]:not(.chord-event):not(.bar-cue),
+button.primary[aria-pressed=true] {
+  background:#45667b;color:#f4f4ee!important;border-color:#d2bc94;filter:none;
+}
+button:disabled {opacity:.4}
+button:focus-visible,summary:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible {
+  outline:2px solid #dac49c;outline-offset:3px;
+}
+input,select {background:var(--field);border:1px solid #8d907f;color:#e9eff4;border-radius:3px}
+input::placeholder {color:#a8b9c8}
+select option,select optgroup {background:#172d40;color:#e9eff4}
+input[type=range] {accent-color:#adc4d5}
+.entry-row input {border-left:3px solid var(--bronze)}
+.seed-mood {color:#dbe5ed;border-color:var(--bronze)}
+.grid {scrollbar-color:#9aabaf #142b3d}
+.bar {border-color:#7893a080}
+.bar:last-child {border-color:#7893a0}
+.bar-number>span {color:#9bafbf}
+button.bar-cue {color:#b9cad7}
+button.bar-cue:hover {background:#3a536455}
+button.bar-cue[aria-pressed=true] {color:#e5d5b5;border-color:#c6ab7b}
+.chord-event {color:#e5ecf1}
+.chord-event:hover {background:#3c60716b}
+.chord-event.chosen {background:#3d56666b;color:#edf2f6;box-shadow:inset 0 -2px #bca274}
+.chord-event.sounding {background:#6c94af;color:#071b2a;box-shadow:inset 0 -3px #dcc596}
+.bar.playing {background:#2e4f675c}
+.transport {border-color:#8196a044}
+.transport span {color:#c1cfda}
+.advanced-settings,.harmonic-tools,.export-row {border-color:var(--line)}
+.disclosure>summary,.tool-drawer>summary {color:#dce5ec}
+.disclosure>summary small {color:#adc0ce}
+.disclosure>summary::before {color:#bfa983}
+.arp-panel {background:#0d2336b3;border-color:#7793a35e}
+.arp-heading h3 {color:#dcd5c5}
+.arp-heading span,.arp-export-note {color:#b9cbd8}
+.arp-preview {color:#b9d2e2;background:#6e8da212}
+.tool-drawer>.panel {backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none}
+/* Pale blue technical paper keeps existing fretboard/tablature ink readable. */
+.diagram,.melody-card {background:#d9e3e9;color:#243746;border:1px solid #91a5b2}
+.diagram-title,.scale-notes {color:#243746}
+.scale-note,.tab-caption,.diagram details,.melody-card p {color:#405563}
+.scale-level {color:#3e5260;border-color:#8399a8}
+.diagram .position-tabs button {
+  background:#bdcdd8!important;color:#213847!important;border-color:#8d9ca2!important;
+}
+.diagram .position-tabs button.active {
+  background:#31536d!important;color:#f0f5f7!important;border-color:#ad956d!important;
+}
+.melody-top {color:#70532e}
+dialog {background:#12283b;color:#e5ecf1;border:1px solid var(--bronze);border-radius:4px}
+dialog::backdrop {background:#020b15bd}
+#editorPreview {background:#294459;color:#edf2f6;border:1px solid #8096a4;border-radius:3px}
+#status:not(:empty) {background:#183449;color:#e5edf4;border-color:var(--bronze)}
+footer,footer a {color:#bbcbd7}
+@media(min-width:851px){
+  .bar{min-width:180px}
+  .bar:has(.chord-event:nth-child(3)){min-width:300px}
+  .bar:has(.chord-event:nth-child(4)){min-width:360px}
+}
+@media(min-width:1600px){body::before{background-size:cover;background-position:center 20%}}
+@media(max-width:850px){
+  header{padding-inline:20px;height:150px}.brand{font-size:26px}
+  body::before{background-position:65% top}
+}
+@media(max-width:600px){
+  body::before{background-size:auto 560px;background-position:85% top;opacity:.8}
+  header{height:112px;padding:14px 16px;align-items:flex-end}
+  .brand{font-size:21px;letter-spacing:3px;gap:10px}.brand img{width:44px;height:44px}
+  .brand small{font-size:7px;letter-spacing:2px}
+  .panel:not(.score){background:#0b1c2df2;backdrop-filter:none;-webkit-backdrop-filter:none}
+  .score{background:#0b1e2e;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+  .transport{background:#0c2133f5;border-color:var(--bronze)}
+  .studio-heading{padding:20px 4px 12px}
+  .score-actions{width:auto}.sectionhead{align-items:center}
+  .score-actions button:not(.chord-event){min-height:36px}
+  button.bar-cue{min-height:32px}.chord-lane{height:44px}
+  .seed-tools .disclosure{min-width:0}
+  .tool-drawer>summary{flex-wrap:wrap}.tool-drawer>summary small{max-width:100%;text-align:left}
+}
+@media(prefers-reduced-transparency:reduce){
+  .panel,.score,.transport{background:#102639;backdrop-filter:none;-webkit-backdrop-filter:none}
+}

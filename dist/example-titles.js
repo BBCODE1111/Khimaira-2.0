@@ -1,0 +1,50 @@
+import {darkStudyMoods} from './dark-styles.js?v=2.0.0-alpha.2';
+// Short, original listening cues, never source-song names.
+export const studyMoods={
+ Jazz:['輕快・街角','苦甜・酒吧','緊張・樓梯'],
+ Gospel:['溫暖・教堂','明亮・階梯','溫暖・合唱'],
+ Fusion:['緊張・霓虹','夢幻・太空','暗色・電流'],
+ 'Bossa nova':['輕快・海邊','溫暖・露台','憂鬱・雨季'],
+ Rock:['明亮・公路','苦甜・青春','暗色・車庫'],
+ 'Japanese rock':['明亮・青春','緊張・跑道','苦甜・校園'],
+ House:['溫暖・舞池','暗色・地下室','明亮・泳池','憂鬱・午夜'],
+ Classical:['溫暖・階梯','明亮・庭園','溫暖・琴房'],
+ 'Phrygian dominant':['緊張・沙丘','夢幻・回廊','莊重・石柱'],
+ 'Dorian folk':['明亮・原野','夢幻・山谷','輕快・小徑'],
+ Soul:['苦甜・咖啡','溫暖・午後','明亮・窗邊'],
+ 'R&B':['溫暖・臥室','憂鬱・雨夜','暗色・絲絨'],
+ Funk:['輕快・街頭','溫暖・球鞋','緊張・電線'],
+ EDM:['明亮・舞台','緊張・倒數','明亮・煙火'],
+ 'Lo-fi hip-hop':['溫暖・唱片','苦甜・舊照片','夢幻・車窗'],
+ Chill:['溫暖・日落','夢幻・海面','夢幻・天空'],
+ 'Neo-soul':['苦甜・絲絨','緊張・暗門','溫暖・沙發'],
+ 'American pop':['明亮・公路','憂鬱・雨窗','明亮・合唱','苦甜・雲層'],
+ Mandopop:['明亮・青春','苦甜・回憶','溫暖・告白'],
+ 'K-pop':['明亮・都會','苦甜・霓虹','夢幻・玻璃'],
+ 'Major blues':['輕快・老街','緊張・巷口','苦甜・木桌'],
+ 'Minor blues':['憂鬱・午夜','緊張・煙霧','深沉・低光'],
+ 'Neoclassical rock':['緊張・階梯','暗色・劇院','緊張・風暴'],
+ 'Nu-disco':['明亮・鏡球','輕快・滑輪','溫暖・燈串'],
+ Ambient:['夢幻・光暈','憂鬱・遠山','夢幻・雲海'],
+ 'Greek Hijaz':['緊張・石巷','深沉・暮色','莊重・石柱'],
+ 'Japanese Hirajoshi':['清冷・月光','清冷・庭石','夢幻・靜水'],
+ 'Japanese In-sen':['清冷・空房','緊張・細線','夢幻・回聲'],
+ 'Ghana Highlife':['明亮・街景','輕快・步伐','溫暖・聚會'],
+ 'Ethiopian Tizita':['溫暖・回憶','苦甜・舊窗','夢幻・微光'],
+ 'Hawaiian Slack-key':['明亮・海風','溫暖・午後','溫暖・木屋'],
+ 'Native Flute':['夢幻・原野','清冷・遠山','夢幻・長空'],
+ 'Indian Bhupali':['明亮・五聲','溫暖・晨光','夢幻・迴圈'],
+ 'Indian Yaman':['夢幻・浮光','明亮・銀線','夢幻・星空'],
+ Afrobeats:['明亮・街頭','輕快・步伐','溫暖・陽光'],
+ Amapiano:['憂鬱・深夜','夢幻・琴鍵','暗色・低音'],
+ Reggaeton:['暗色・熱浪','緊張・舞步','明亮・燈光'],
+ Dancehall:['輕快・街角','暗色・低光','溫暖・舞池'],
+ 'Latin Pop':['暗色・熱浪','明亮・旋轉','緊張・弧線'],
+ Flamenco:['緊張・階梯','苦甜・燭光','莊重・庭院'],
+ 'Arabic Hijaz':['夢幻・沙色','深沉・夜空','緊張・迴廊'],
+ 'Celtic Dorian':['明亮・小徑','夢幻・山谷','輕快・原野']
+};
+Object.assign(studyMoods,darkStudyMoods);
+export function moodCategory(label){return /^(明亮|溫暖|輕快)/.test(label)?'bright':/^(夢幻)/.test(label)?'dreamy':/^(緊張|莊重)/.test(label)?'tense':'melancholy';}
+export function studyMood(style,index){const moods=studyMoods[style]||['溫暖・琴房'];return moods[index%moods.length];}
+export function exampleTitle(example,index){return `Ex${index+1} · ${example.mood}`;}

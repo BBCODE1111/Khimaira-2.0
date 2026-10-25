@@ -1,3 +1,19 @@
+# Fusion validation · 2026-10-25 · 2.0.0-alpha.2
+
+80 automated tests passed, including the retained alpha 1 suite and copied v1 regression suites.
+
+- All 48 original styles × five rewrite methods: melody preserved, actual accompaniment checked, exported MIDI decoded.
+- Every original performance pattern with no melody: exact event parity with the v1 engine.
+- Dense chromatic passages, safe slash-bass preservation, unsafe manual edits, ARP modes/rates, 3/4 and 6/8 timing.
+- Original 1.0 harmony, arpeggiator, sustain continuity, MIDI rounding, tempo changes, dark styles and regional style regressions.
+- Shared-clock variable-tempo/cue playback; loop exit at cycle boundary; cancellation during sample loading.
+- Piano sample envelope: melody-mode gain reaches zero at note-off; original natural release remains available without melody.
+- Browser: original layout / full style list, WAV detection (32 notes / 108 BPM), original-audio playback, House/GENERATE/ARP controls, MIDI export, live volume 35% → 30% while transport continues, variable-tempo MIDI import with 6/8 and preserved tempo map.
+
+The browser checks validate functionality and scheduling, not human listening quality or universal DAW compatibility. The default mix is intended for comparison and remains user adjustable.
+
+---
+
 # Validation · 2026-10-25 · 2.0.0-alpha.1
 
 ## Automated
