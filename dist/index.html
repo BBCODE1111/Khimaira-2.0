@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0c1924">
+  <meta name="description" content="KHIMAIRA 2.0：從旋律音訊或 MIDI 開始，建立與旋律相容的和弦，探索不同樂風。">
+  <title>KHIMAIRA 2.0 · Melody Lab</title>
+  <link rel="icon" href="./mark.svg"><link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="hero">
+    <nav><a href="./" class="wordmark">KHIMAIRA <span>2.0</span></a><div><span class="alpha">MELODY LAB · ALPHA 1</span><a href="https://bbcode1111.github.io/Khimaira/" target="_blank" rel="noopener">開啟 1.0 ↗</a></div></nav>
+    <div class="hero-copy"><span class="eyebrow">YOUR MELODY. NEW POSSIBILITIES.</span><h1>讓和弦，跟著你的旋律。</h1><p>放入旋律，確認音高與節拍。<br>從一組基本和弦開始，探索保護旋律的樂風變化。</p></div>
+    <div class="hero-foot"><span>音訊 / MIDI → 旋律 → 和弦 → 樂風</span><span class="privacy-dot">檔案留在你的瀏覽器</span></div>
+  </header>
+  <main>
+    <section class="panel import-panel" aria-labelledby="import-heading">
+      <div class="section-head"><div><span class="step">01 / IMPORT</span><h2 id="import-heading">先讓我聽見你的旋律</h2></div><button id="demo" class="secondary">試用 8 小節範例</button></div>
+      <div id="dropzone" class="dropzone">
+        <div class="upload-icon" aria-hidden="true">↥</div><h3>拖入旋律音訊或 MIDI</h3>
+        <p>乾淨哼唱、單音樂器，或 DAW 匯出的旋律軌。</p>
+        <label class="button primary file-label" for="file">選擇檔案<input id="file" type="file" accept=".mid,.midi,.wav,.mp3,.m4a,.aac,.ogg,.flac,audio/*"></label>
+        <span class="fine">音訊最長 120 秒 / 40 MB · MIDI 最多 2,000 音 · 音訊格式依瀏覽器支援</span>
+      </div>
+      <div id="progress-wrap" hidden><progress id="progress" max="1" value="0"></progress><button id="cancel-analysis" class="secondary">取消分析</button></div>
+      <p id="status" class="status" role="status" aria-live="polite">還沒有匯入旋律。你可以先試用範例，聽聽每種樂風的差異。</p>
+      <p class="fine"><button id="demo-audio" class="mini">試試音訊辨識</button>　原創測試素材：<a href="./examples/melody-108.mid" download>旋律 MIDI</a> · <a href="./examples/melody-108.wav" download>旋律 WAV</a></p>
+      <p id="error" class="error" role="alert" hidden></p>
+    </section>
+
+    <div id="workspace" hidden>
+      <section class="panel" aria-labelledby="melody-heading">
+        <div class="section-head"><div><span class="step">02 / UNDERSTAND</span><h2 id="melody-heading">先確認旋律，再開始變化</h2></div><span class="source-name" id="source-name"></span></div>
+        <div class="analysis-grid">
+          <div class="metric"><label for="bpm">速度 <span>BPM</span></label><input id="bpm" type="number" min="30" max="300" step="0.5" value="120"><small id="tempo-info"></small><div class="tempo-actions"><button id="half-tempo" class="mini">½ 速度</button><button id="double-tempo" class="mini">2× 速度</button></div></div>
+          <div class="metric"><label for="key-root">調性 <span>KEY</span></label><div class="inline"><select id="key-root" aria-label="主音"></select><select id="key-mode" aria-label="大小調"><option value="major">大調</option><option value="minor">小調</option></select></div><small id="key-info"></small></div>
+          <div class="metric"><label for="meter">拍號 <span>METER</span></label><select id="meter"><option value="4/4">4 / 4</option><option value="3/4">3 / 4</option><option value="6/8">6 / 8</option></select><small id="note-count"></small></div>
+        </div>
+        <div class="source-controls">
+          <label id="track-wrap" hidden>旋律軌 <select id="track"></select></label>
+          <label id="offset-wrap" hidden>音訊第 1 拍位置（秒）<input id="offset" type="number" min="0" step="0.01" value="0"></label>
+          <label id="tempo-override-wrap" hidden><input id="tempo-override" type="checkbox"> 將 MIDI 變速圖改為固定 BPM</label>
+        </div>
+        <div id="source-warnings" class="notes-callout"></div>
+        <div class="roll-head"><span><i class="dot melody-dot"></i>旋律 <i class="dot chord-dot"></i>伴奏</span><span>點選旋律音符可修正音高與時間</span></div>
+        <div class="roll-scroller" id="roll-scroller"><svg id="piano-roll" aria-label="旋律與伴奏鋼琴捲軸" role="img" viewBox="0 0 960 240"></svg></div>
+        <div class="key-candidates" id="key-candidates"></div>
+        <details class="editor-details"><summary>查看 / 編輯旋律音符</summary><div class="table-scroll"><table><thead><tr><th>音符</th><th>起始拍</th><th>長度</th><th>音高可信度</th><th></th></tr></thead><tbody id="note-table"></tbody></table></div></details>
+      </section>
+
+      <section class="panel harmony-panel" aria-labelledby="harmony-heading">
+        <div class="section-head"><div><span class="step">03 / HARMONIZE</span><h2 id="harmony-heading">給同一段旋律，不同的表情</h2></div><button id="generate-basic" class="primary">生成基本和弦</button></div>
+        <div class="style-grid" id="style-grid" aria-label="樂風選擇"></div>
+        <div class="variation-row"><p id="style-description">先按「生成基本和弦」，或選一種樂風開始。</p><button id="variation" class="secondary" disabled>同樂風，再變化一次 ↻</button></div>
+        <div class="safety-bar"><span class="shield" aria-hidden="true">◇</span><div><strong>旋律保護 · 嚴格協和</strong><p>檢查所有重疊音，避開二度、七度與三全音。沒有安全選項時拆段或留白；爵士延伸音也遵守相同規則。</p></div><span id="audit-badge" class="audit-badge">等待生成</span></div>
+        <p class="fine safety-note">此規則只保證「目前辨識／編輯後的音符」通過檢查，不代表所有曲風的美感標準，也無法保證誤辨識的原音不撞音。</p>
+        <div id="chord-grid" class="chord-grid"><p class="empty-copy">基本和弦與每段使用的音高會出現在這裡。</p></div>
+        <p id="harmony-info" class="fine"></p>
+      </section>
+    </div>
+
+    <section class="how-it-works"><div><span>01</span><h3>聽懂旋律</h3><p>MIDI 直接讀取音符與速度圖；音訊估計單音音高、起訖與節拍，保留人工修正。</p></div><div><span>02</span><h3>和弦先過檢查</h3><p>以旋律、調性與聲部連接挑選和弦，實際伴奏音符再次檢查後才播放。</p></div><div><span>03</span><h3>帶回你的創作</h3><p>旋律與伴奏同步試聽，匯出分軌 MIDI。2.0 先在網頁驗證，DAW 外掛稍後開發。</p></div></section>
+    <footer><span>KHIMAIRA 2.0 · Melody Lab · α1</span><a href="https://github.com/BBCODE1111/Khimaira-2.0" target="_blank" rel="noopener">專案 / 已知限制 ↗</a></footer>
+  </main>
+
+  <div id="transport" class="transport" hidden>
+    <div class="transport-buttons"><button id="play" class="play primary" aria-label="播放旋律與伴奏">▶ PLAY</button><button id="stop" class="secondary">■ STOP</button><span id="playhead">BAR 1 · BEAT 1</span></div>
+    <div class="mix-controls"><label>旋律試聽<select id="listen-mode"><option value="notes">辨識音符</option><option value="original" disabled>原音訊</option><option value="mute">只聽伴奏</option></select></label><label>旋律<input id="melody-volume" type="range" min="0" max="1" step=".05" value=".8" aria-label="旋律音量"></label><label>伴奏<input id="harmony-volume" type="range" min="0" max="1" step=".05" value=".65" aria-label="伴奏音量"></label></div>
+    <button id="export" class="export secondary" disabled>↓ 分軌 MIDI</button>
+  </div>
+
+  <dialog id="note-dialog"><form id="note-form"><span class="step">EDIT MELODY</span><h2>修正旋律音符</h2><p id="editing-note"></p><label>音高（MIDI 0–127）<input id="edit-pitch" type="number" min="0" max="127" step="1" required></label><label>起始拍（從 0 計算）<input id="edit-start" type="number" min="0" step=".001" required></label><label>音長（拍）<input id="edit-duration" type="number" min=".001" step=".001" required></label><p id="edit-error" class="error" hidden></p><div class="dialog-actions"><button type="button" id="delete-note" class="danger">移除音符</button><button type="button" id="cancel-edit" class="secondary">取消</button><button type="submit" class="primary">儲存並重新配和弦</button></div><p class="fine">修正後會以更新的旋律重新檢查和弦。原始音訊本身不會被改寫。</p></form></dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
