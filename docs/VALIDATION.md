@@ -1,3 +1,19 @@
+# Rhythm, direct editing and accompaniment-only export · 2.0.0-alpha.5
+
+104 automated tests passed, retaining the 97 alpha 4 checks. New regressions assert identical groove events when a chord is subdivided, unchanged bar attack positions through fractional chord boundaries in 3/4, 4/4 and 6-quarter-note bars, half-beat harmonic repair boundaries, shared group movement/clamping/resizing, reverse marquee intersection, undo from an empty phrase, physically absent melody tracks, and inward MIDI rounding against an untouched audio reference.
+
+Browser checks:
+- Empty phrase → single-click note drawing; three-note marquee → group drag; all 32 notes → keyboard time shift; duplicate three notes → undo; delete all → restore 32 notes.
+- 390px iframe viewport: separate draw/erase tools create and delete notes by single click, sticky tool row stays reachable and the mobile transport stays visible. This is a narrow-viewport interaction check, not physical iOS/Android touch-device certification.
+- Actual original wet vocal → 81 notes, 80 BPM/D-major filename provenance → confirm → House / GENERATE → common-clock playback and moving piano-roll cursor, no console errors.
+- The retained wet-vocal decoder fixture changes from 21 off-grid harmonic boundaries to zero; no N.C. spans in that fixture. With humanization/swing disabled, Ballad/Jazz/House/Rock retain all attack positions after compatibility repair (zero removed events); selected interval audits pass. This is not a claim that all recordings will have zero omitted sounds.
+- Native in-app-browser drag fired the correct export handler, but its cross-frame drop did not expose a File payload. Direct external-DAW drag is therefore not certified; use the downloaded file where unsupported.
+- Browser download independently parsed: two SMF tracks (conductor + harmony), one sounding track on CH 2, 187 accompaniment notes, 80 BPM and 4/4, no melody track.
+
+No human listening-quality score or universal browser-to-DAW drag compatibility is claimed. The source vocal's unannotated transcription remains an estimate; original-waveform alignment depends on the confirmed BPM and first-beat offset. No user media is committed.
+
+---
+
 # Real-audio and playback repairs · 2.0.0-alpha.4
 
 97 automated tests passed. Added regression coverage for filename provenance and leading rests, pitch-path smoothing with retained chromatic tones/rests/repeated attacks, final-chart diversity across styles and repeated generation, retained ornament attack positions, tied common tones vs rhythmic reattacks, bounded natural releases, short-note synth envelopes, and both explicit compatibility policies through re-parsed MIDI export.

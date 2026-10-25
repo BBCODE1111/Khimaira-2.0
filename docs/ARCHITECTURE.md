@@ -1,6 +1,6 @@
-# Architecture · Alpha 2
+# Architecture · Alpha 5
 
-The website is dependency-free ES modules. There is no server-side audio processing.
+The workbench uses native ES modules; the audio transcription worker uses a bundled Basic Pitch / TensorFlow runtime. There is no server-side audio processing.
 
 | Module | Responsibility |
 | --- | --- |
@@ -18,13 +18,13 @@ The website is dependency-free ES modules. There is no server-side audio process
 
 All musical positions use quarter-note beats, regardless of displayed meter. Audio transcription retains seconds; beats are `(seconds - firstBeatOffset) * BPM / 60`. Changing audio BPM does not alter the original buffer. MIDI playback integrates its full piecewise tempo map. Exports preserve that map unless a fixed-tempo override is selected.
 
-Generated events are clipped to their vetted harmonic span. Melody synth releases end at note-off. Harmony sample releases may extend within the audited compatibility window. Imported MIDI sustain is expanded into sounding note lengths. External instruments may add tails, modulation or tuning and require separate listening checks.
+Rhythmic templates run on full bars; voice slots are remapped at their scheduled attacks to the active chord, rather than restarting the pattern for each harmony segment. Sustains retain span-based voice leading; ARP retains its existing global step grid. Actual note lengths are checked against the reference melody. Melody synth releases end at note-off. Harmony sample releases may extend within the audited compatibility window. Imported MIDI sustain is expanded into sounding note lengths. External instruments may add tails, modulation or tuning and require separate listening checks.
 
 ## Harmony contract
 
 Strict mode allows interval classes `{0, 3, 4, 5, 7, 8, 9}` relative to every simultaneous melody note. Alpha 4 adds the explicitly labelled musical-color mode (UI default), which also permits `{2, 10}` while rejecting semitones and tritones. The same selected policy is passed to chord search, performance repair, audible release checks and re-parsed MIDI auditing. This is a conservative product policy, not a universal definition of consonance. Chord extensions can still contain internal tension; the guarantee concerns accompaniment against the melody.
 
-The candidate pool is a set of conventional chord qualities across 12 roots. Prefer full chords, then split on actual note boundaries if none fit. At the minimum span or split-depth limit, use a compatible reduced chord or silence. A dynamic-programming path balances melody chord tones, key membership, shared notes, root motion and seeded style preferences. Render each span with existing performance patterns, clip durations, then reject any failed actual-note audit.
+The candidate pool is a set of conventional chord qualities across 12 roots. Prefer full chords, then split on half-beat grid positions in the web workbench if none fit (the standalone API retains its optional note-boundary split mode). At the minimum span or split-depth limit, use a compatible reduced chord or silence. A dynamic-programming path balances melody chord tones, key membership, shared notes, root motion and seeded style preferences. Render a bar-based rhythm template, map notes to active harmony, repair incompatible pitches or shorten/omit impossible sounds, then reject any failed actual-note audit.
 
 The strict mode intentionally does not allow passing-tone exceptions or unresolved extensions. The selected policy must remain explicit in the UI and in the audit label; zero hard clashes in musical-color mode does not claim zero musical tension.
 
@@ -42,7 +42,7 @@ Without an imported melody, original mutations, voice planning, performance, sam
 
 Volume: one melody bus defaults to 0.35 and a separate piano master retains its original 0.68 at harmony 100%. Melody sine amplitude is reduced from alpha 1; original audio is normalized downward only. Slider input updates gain targets without restarting playback.
 
-Reference-scale and guitar-chord-melody audition remain separate tools; they do not play the imported melody simultaneously and do not carry its compatibility claim. Imported melody is included in the main score MIDI exports.
+Reference-scale and guitar-chord-melody audition remain separate tools; they do not play the imported melody simultaneously and do not carry its compatibility claim. Imported melody is a reference only: main score exports and drag payloads omit the Melody track physically, preserving the tempo conductor and harmony track. Export first audits quantized reference+accompaniment, then rounds accompaniment inward and audits the delivered notes against the unquantized reference. The internal encoder still supports dual-track exports for regression tests.
 
 
 ## Direct note editing (alpha 3)
@@ -61,3 +61,7 @@ Reference-scale and guitar-chord-melody audition remain separate tools; they do 
 `rewriteWithMelody` searches safe half-bar harmony spans using the original style's qualities and candidate preferences, with a penalty for repeating the previous displayed choices. `applyMutation` retries based on the final rendered chord chart, not the pre-protection candidate. Strict mode retains its original interval contract; musical-color mode uses the separately displayed wider interval set.
 
 `renderProtected` replaces unsafe ornaments with nearest safe chord tones where possible, otherwise clips only the conflicting remainder. Duplicate attacks are consolidated. Adjacent held common tones tie across boundaries; rhythmic attacks remain independent. A short natural piano release is bounded by the next conflicting melody, same-pitch reattack and score end; the extended audible events also reach MIDI auditing. Playback carries `gateEnd` separately to shape the release. `melody-synth.js` provides deterministic harmonic waveforms, low-pass filtering and short-note-safe envelopes without pitch-obscuring detune.
+
+## Alpha 5 editor
+
+PianoRoll owns an index selection set and transient pointer gesture. Marquee, move, resize and draw previews do not mutate the project until pointer-up; one gesture is one history step. Group movement uses one bounded delta so it preserves relative timing and intervals at pitch/timeline limits. Empty melodies are editable and undoable; pure harmony generation still requires a nonempty reference. Touch uses explicit select/draw/erase/pan tools, a sticky horizontally scrollable toolbar and shared nudge actions. Numerical editing remains optional.

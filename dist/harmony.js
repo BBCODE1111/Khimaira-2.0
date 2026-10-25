@@ -1,6 +1,6 @@
-import { parse } from './engine/music.js?v=2.0.0-alpha.4';
-import { performance } from './engine/performance.js?v=2.0.0-alpha.4';
-import { mod, noteNames } from './analysis.js?v=2.0.0-alpha.4';
+import { parse } from './engine/music.js?v=2.0.0-alpha.5';
+import { performance } from './engine/performance.js?v=2.0.0-alpha.5';
+import { mod, noteNames } from './analysis.js?v=2.0.0-alpha.5';
 
 export const styles = {
   basic: { label: '基本和弦', pattern: 'sustain', qualities: ['', 'm', 'sus2', 'sus4'], voicing: 'close', description: '先建立清楚的三和弦與穩定長音。' },
@@ -46,7 +46,7 @@ export function auditHarmony(melody, accompaniment, {policy='strict'}={}) {
   return conflicts;
 }
 
-export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: styleId = 'basic', seed = 0, beatsPerBar = 4, qualities = null, preferred = [], spanBeats = beatsPerBar, avoid = [], policy='strict' } = {}) {
+export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: styleId = 'basic', seed = 0, beatsPerBar = 4, qualities = null, preferred = [], spanBeats = beatsPerBar, avoid = [], harmonicGrid = 0, policy='strict' } = {}) {
   validateMelody(melody);
   if (!(beatsPerBar > 0 && beatsPerBar <= 32)) throw Error('不支援這個拍號。');
   const cfg = { ...(styles[styleId] || styles.basic), ...(qualities ? { qualities } : {}) }, pool = candidatePool(cfg), rng = random(seed);
@@ -55,9 +55,11 @@ export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: sty
   function split(start, end, depth = 0) {
     const candidates = candidatesFor(start, end, melody, pool, policy);
     const full = candidates.filter(c => c.pcs.length >= 3);
-    if (full.length || end - start <= .125 || depth >= 12) { pieces.push({ start, end, candidates: full.length ? full : candidates }); return; }
+    if (full.length || end - start <= Math.max(.125,harmonicGrid)+1e-7 || depth >= 12) { pieces.push({ start, end, candidates: full.length ? full : candidates }); return; }
     // Preserve long harmonic spans where possible; split at real note boundaries only when necessary.
-    const boundaries = [...new Set(melody.flatMap(n => [n.start, n.end]).filter(t => t > start + 1e-6 && t < end - 1e-6))];
+    const boundaries = harmonicGrid>0
+      ? Array.from({length:Math.ceil(end/harmonicGrid)},(_,i)=>(i+1)*harmonicGrid).filter(t=>t>start+1e-6&&t<end-1e-6)
+      : [...new Set(melody.flatMap(n => [n.start, n.end]).filter(t => t > start + 1e-6 && t < end - 1e-6))];
     if (!boundaries.length) { pieces.push({ start, end, candidates }); return; }
     const middle = boundaries.reduce((a, b) => Math.abs(b - (start + end) / 2) < Math.abs(a - (start + end) / 2) ? b : a);
     split(start, middle, depth + 1); split(middle, end, depth + 1);

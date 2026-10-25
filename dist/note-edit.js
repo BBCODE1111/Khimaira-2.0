@@ -30,3 +30,27 @@ export class NoteHistory {
   undo(notes) { if (!this.undoStack.length) return null; this.redoStack.push(structuredClone(notes)); return this.undoStack.pop(); }
   redo(notes) { if (!this.redoStack.length) return null; this.undoStack.push(structuredClone(notes)); return this.redoStack.pop(); }
 }
+
+// One shared delta preserves a selection's spacing and imported microtiming.
+export function transformSelection(notes, indices, options={}) {
+  const selected=[...indices].filter(i=>notes[i]);
+  if(!selected.length)return notes.map(n=>({...n}));
+  const {kind='move',step=.25,horizontal=true}=options;
+  let deltaBeat=options.deltaBeat??0,deltaPitch=Math.round(options.deltaPitch??0);
+  if(!Number.isFinite(deltaBeat)||!Number.isFinite(deltaPitch)||!Number.isFinite(step)||step<0)throw Error('無效的移動。');
+  const group=selected.map(i=>notes[i]);
+  if(kind==='move'){
+    const anchor=notes[selected[0]];
+    deltaBeat=horizontal?snap(anchor.start+deltaBeat,step)-anchor.start:0;
+    deltaBeat=clamp(deltaBeat,-Math.min(...group.map(n=>n.start)),MAX_BEATS-Math.max(...group.map(n=>n.end)));
+    deltaPitch=clamp(deltaPitch,-Math.min(...group.map(n=>n.pitch)),127-Math.max(...group.map(n=>n.pitch)));
+  }else{
+    const edge=kind==='start'?'start':'end';deltaBeat=snap(notes[selected[0]][edge]+deltaBeat,step)-notes[selected[0]][edge];
+    deltaBeat=kind==='start'?clamp(deltaBeat,-Math.min(...group.map(n=>n.start)),Math.min(...group.map(n=>n.end-n.start-MIN_NOTE_BEATS))):clamp(deltaBeat,-Math.min(...group.map(n=>n.end-n.start-MIN_NOTE_BEATS)),MAX_BEATS-Math.max(...group.map(n=>n.end)));
+  }
+  const chosen=new Set(selected);
+  return notes.map((n,i)=>!chosen.has(i)?{...n}:kind==='move'?{...n,start:n.start+deltaBeat,end:n.end+deltaBeat,pitch:n.pitch+deltaPitch}:{...n,[kind==='start'?'start':'end']:n[kind==='start'?'start':'end']+deltaBeat});
+}
+export function notesInBox(notes,{start,end,low,high}) {
+  return notes.flatMap((n,i)=>n.end>Math.min(start,end)&&n.start<Math.max(start,end)&&n.pitch>=Math.min(low,high)&&n.pitch<=Math.max(low,high)?[i]:[]);
+}

@@ -143,7 +143,7 @@ function trackChunk(name, events) {
   }
   data.push(0, 0xff, 0x2f, 0); return chunk('MTrk', data);
 }
-export function encodeMidi({ melody = [], accompaniment = [], tempoMap = [{ beat: 0, bpm: 120 }], meter = { numerator: 4, denominator: 4 } }) {
+export function encodeMidi({ melody = [], accompaniment = [], tempoMap = [{ beat: 0, bpm: 120 }], meter = { numerator: 4, denominator: 4 }, includeMelody = true }) {
   const ppq = 960;
   const tempos = normalizeTempoMap(tempoMap).map(t => {
     const us = clip(Math.round(60000000 / t.bpm), 1, 0xffffff);
@@ -160,5 +160,5 @@ export function encodeMidi({ melody = [], accompaniment = [], tempoMap = [{ beat
     }
     return trackChunk(name, events);
   };
-  return new Uint8Array([...chunk('MThd', [...be16(1), ...be16(3), ...be16(ppq)]), ...trackChunk('KHIMAIRA tempo', tempos), ...makeNotes(melody, 0, 'Melody'), ...makeNotes(accompaniment, 1, 'KHIMAIRA harmony')]);
+  return new Uint8Array([...chunk('MThd', [...be16(1), ...be16(includeMelody?3:2), ...be16(ppq)]), ...trackChunk('KHIMAIRA tempo', tempos), ...(includeMelody?makeNotes(melody, 0, 'Melody'):[]), ...makeNotes(accompaniment, 1, 'KHIMAIRA harmony')]);
 }

@@ -1,7 +1,7 @@
-import { parse } from './music.js?v=2.0.0-alpha.4';
-import { styles as legacyStyles } from './style-engine.js?v=2.0.0-alpha.4';
-import { harmonize, auditHarmony, compatible, overlaps } from './harmony.js?v=2.0.0-alpha.4';
-import { performance } from './performance.js?v=2.0.0-alpha.4';
+import { parse } from './music.js?v=2.0.0-alpha.5';
+import { styles as legacyStyles } from './style-engine.js?v=2.0.0-alpha.5';
+import { harmonize, auditHarmony, compatible, overlaps } from './harmony.js?v=2.0.0-alpha.5';
+import { performance, voicePlan } from './performance.js?v=2.0.0-alpha.5';
 
 export const barLength = meter => (meter?.numerator || 4) * 4 / (meter?.denominator || 4);
 export function normalizeChart(chart, beats = 4) {
@@ -35,7 +35,7 @@ export function protectChart(chart, melody, { meter, key = {root:0,mode:'major'}
       const span={start:at,end:at+c.beats};at=span.end;
       const parsed=parse(c.symbol), active=melody.filter(n=>overlaps(n,span));
       if (c.symbol==='N.C.' || !active.length || parsed && [...parsed.pcs,parsed.bass].every(pc=>active.every(n=>compatible(pc,n.pitch,policy)))) {chords.push({...c});continue;}
-      fallback ||= harmonize(melody,{key,seed,policy,beatsPerBar:beats,...profile(style),preferred});
+      fallback ||= harmonize(melody,{key,seed,policy,harmonicGrid:.5,beatsPerBar:beats,...profile(style),preferred});
       changed++;
       for(const s of fallback.segments){const start=Math.max(s.start,span.start),end=Math.min(s.end,span.end);if(end>start+1e-7)chords.push({symbol:s.symbol,beats:end-start});}
       // A chart can extend beyond the melody; keep its requested harmony there.
@@ -49,11 +49,27 @@ export function protectChart(chart, melody, { meter, key = {root:0,mode:'major'}
 function spans(chart,beats){return normalizeChart(chart,beats).flatMap((bar,i)=>{let start=i*beats;return bar.chords.map(c=>{const s={...c,start,end:start+c.beats};start=s.end;return s;});});}
 // Generate in the feasible melody-aware space, then compare the final protected chart.
 export function rewriteWithMelody(candidate,melody,{meter,key,style='Jazz',seed=0,previous=[],policy='strict'}={}){
- const beats=barLength(meter),result=harmonize(melody,{key,seed,policy,beatsPerBar:beats,spanBeats:beats/2,...profile(style),preferred:spans(candidate,beats),avoid:spans(previous,beats)});
+ const beats=barLength(meter),result=harmonize(melody,{key,seed,policy,harmonicGrid:.5,beatsPerBar:beats,spanBeats:beats/2,...profile(style),preferred:spans(candidate,beats),avoid:spans(previous,beats)});
  return chartFromSegments(result.segments,beats,result.totalBeats).map(bar=>{const chords=[];for(const c of bar.chords){if(chords.at(-1)?.symbol===c.symbol)chords.at(-1).beats+=c.beats;else chords.push({...c});}return {...bar,chords};});
 }
+// The groove belongs to the bar, never to the number or length of harmony repairs.
+// Render a full-bar rhythm template and map its voice slots to the chord at each attack.
+export function pulsePerformance(chart, pattern, options={}) {
+ if(['sustain','block','arp'].includes(pattern))return performance(chart,pattern,options);
+ const beats=options.barBeats||4, actual=voicePlan(chart,options);
+ const template=chart.map(bar=>({chords:[{symbol:bar.chords?.find(c=>parse(c.symbol))?.symbol||'C',beats}]}));
+ const anchors=voicePlan(template,options),raw=performance(template,pattern,options);
+ return raw.flatMap(n=>{
+  const chord=actual.find(s=>n.beat>=s.beat-1e-7&&n.beat<s.beat+s.beats-1e-7);
+  if(!chord)return [];
+  const anchor=anchors[Math.floor(n.beat/beats)];
+  const slot=anchor.notes.reduce((best,p,i)=>Math.abs(p-n.note)<Math.abs(anchor.notes[best]-n.note)?i:best,0);
+  const target=slot===0?0:1+Math.round((slot-1)*Math.max(0,chord.notes.length-2)/Math.max(1,anchor.notes.length-2));
+  return [{...n,note:Math.max(21,Math.min(108,chord.notes[target]+n.note-anchor.notes[slot]))}];
+ });
+}
 export function renderProtected(chart, pattern, options={}, melody=[]) {
- const raw=performance(chart,pattern,options),policy=options.policy||'strict';
+ const raw=melody.length?pulsePerformance(chart,pattern,options):performance(chart,pattern,options),policy=options.policy||'strict';
  if(!melody.length)return {notes:raw,accompaniment:raw.map(n=>({pitch:n.note,start:n.beat,end:n.beat+n.duration,velocity:n.velocity})),removed:0,adjusted:0};
  const beats=options.barBeats||4,chartSpans=spans(chart,beats),notes=[];let removed=0,adjusted=0;
  for(const original of raw){

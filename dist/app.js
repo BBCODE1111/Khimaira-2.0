@@ -1,23 +1,23 @@
-import {MelodyWorkspace} from './melody-workspace.js?v=2.0.0-alpha.4';
-import {MelodyPlayer} from './player.js?v=2.0.0-alpha.4';
-import {harmonize} from './harmony.js?v=2.0.0-alpha.4';
-import {barLength,normalizeChart,chartFromSegments,protectChart,renderProtected,rewriteWithMelody} from './fusion.js?v=2.0.0-alpha.4';
-import {encodeAuditedMidi} from './export.js?v=2.0.0-alpha.4';
+import {MelodyWorkspace} from './melody-workspace.js?v=2.0.0-alpha.5';
+import {MelodyPlayer} from './player.js?v=2.0.0-alpha.5';
+import {harmonize} from './harmony.js?v=2.0.0-alpha.5';
+import {barLength,normalizeChart,chartFromSegments,protectChart,renderProtected,rewriteWithMelody} from './fusion.js?v=2.0.0-alpha.5';
+import {encodeAuditedMidi} from './export.js?v=2.0.0-alpha.5';
 let melodyLab=null;const melodyPlayer=new MelodyPlayer();
 const chartText=chart=>{const text=serialize(chart).replace(/:(\d+(?:\.\d+)?)/g,(_,v)=>':'+Number(Number(v).toFixed(6)));return barBeats()===4?text.replace(/:4(?=\s*\|)/g,''):text;};
 const barBeats=()=>melodyLab?.active?barLength(melodyLab.meter):4;
-import {arpModes,arpRates,arpPresets} from './arpeggiator.js?v=2.0.0-alpha.4';
-import {examplePool,nextExample} from './example-pool.js?v=2.0.0-alpha.4';
-import {BeatPlayer,validTempo,clampTempo} from './tempo-player.js?v=2.0.0-alpha.4';
-import {insertCadence,invertChord,parallelColor} from './harmony-actions.js?v=2.0.0-alpha.4';
-import {playbackSlice,spaceToggles} from './transport.js?v=2.0.0-alpha.4';
-import {names,mod,parse,generate,approach,events,guitarShapes,scales,midiBytes,chordTones} from './music.js?v=2.0.0-alpha.4';
-import {parseBar,parseChart,chordList,serialize,solve} from './solutions.js?v=2.0.0-alpha.4';
-import {styles,mutate,library,styleLabels,cadenceTo} from './style-engine.js?v=2.0.0-alpha.4';
-import {patterns,voicePlan} from './performance.js?v=2.0.0-alpha.4';
-import {scaleNotes,scalePositions} from './scale-library.js?v=2.0.0-alpha.4';
-import {guitarMelody,melodyShapes,melodyEvents} from './guitar-melody.js?v=2.0.0-alpha.4';
-import {Piano} from './piano.js?v=2.0.0-alpha.4';
+import {arpModes,arpRates,arpPresets} from './arpeggiator.js?v=2.0.0-alpha.5';
+import {examplePool,nextExample} from './example-pool.js?v=2.0.0-alpha.5';
+import {BeatPlayer,validTempo,clampTempo} from './tempo-player.js?v=2.0.0-alpha.5';
+import {insertCadence,invertChord,parallelColor} from './harmony-actions.js?v=2.0.0-alpha.5';
+import {playbackSlice,spaceToggles} from './transport.js?v=2.0.0-alpha.5';
+import {names,mod,parse,generate,approach,events,guitarShapes,scales,midiBytes,chordTones} from './music.js?v=2.0.0-alpha.5';
+import {parseBar,parseChart,chordList,serialize,solve} from './solutions.js?v=2.0.0-alpha.5';
+import {styles,mutate,library,styleLabels,cadenceTo} from './style-engine.js?v=2.0.0-alpha.5';
+import {patterns,voicePlan} from './performance.js?v=2.0.0-alpha.5';
+import {scaleNotes,scalePositions} from './scale-library.js?v=2.0.0-alpha.5';
+import {guitarMelody,melodyShapes,melodyEvents} from './guitar-melody.js?v=2.0.0-alpha.5';
+import {Piano} from './piano.js?v=2.0.0-alpha.5';
 const $=id=>document.getElementById(id);let bars=parseChart('| C | Am | F | G |'),source=structuredClone(bars),selected=0,selectedChord=0,tab='scales',audio=null,timer=null,started=0,run=0,activeNodes=[];
 let startBar=0,isPlaying=false,loading=false,player=null,playbackKind='score';
 let variation=0,piano=null,scaleChoice='',lastScaleChord='',positionChoice=0,method='style',currentExampleId=null,melodySeed=0,arrangement=[],history=[];
@@ -64,7 +64,7 @@ function styleInfo(){const cfg=styles[$('style').value];$('styleNote').textConte
 function syncStyleMode(){if(melodyLab?.active){$('mode').disabled=false;$('mode').value=melodyLab.key.mode;return;}const cfg=styles[$('style').value];$('mode').disabled=!!cfg.world;if(cfg.world)$('mode').value='modal';else if($('mode').value==='modal')$('mode').value='major';}
 function syncMethod(){document.querySelectorAll('[data-solution]').forEach(b=>b.classList.toggle('active',b.dataset.solution===method));$('methodLabel').textContent=({original:'原始進行',style:'風格改寫',color:'延伸色彩',cadence:'ii–V 接近',tritone:'三全音代理'})[method]+' · 更多設定';}
 function applyMutation(next=true){
- if(melodyLab?.reviewRequired){status('請先在旋律區確認辨識結果，再配和弦。');return;}
+ if(melodyLab?.reviewRequired){status('請先在旋律區確認辨識結果，再配和弦。');return;}if(melodyLab?.kind==='manual'&&!melodyLab.active){status('先用「畫音符」加入旋律，再生成和弦。');return;}
  checkpoint();stop();if(next)variation++;
  const before=serialize(bars),generate=()=>{const candidate=mutate(mutationSource(),config());return melodyLab?.active?(method==='original'?protectChart(candidate,melodyLab.notes,{meter:melodyLab.meter,key:melodyLab.key,policy:melodyLab.policy,style:$('style').value,seed:variation}).bars:rewriteWithMelody(candidate,melodyLab.notes,{meter:melodyLab.meter,key:melodyLab.key,policy:melodyLab.policy,style:$('style').value,seed:variation,previous:bars})):candidate;};
  let candidate=generate();for(let retry=0;method!=='original'&&serialize(candidate)===before&&retry<8;retry++){variation++;candidate=generate();}
@@ -111,7 +111,7 @@ function updateCue(){
  if(!isPlaying&&!loading)$('position').textContent='READY · BAR '+(startBar+1);
 }
 function cueBar(i){const resume=isPlaying||loading;stop();startBar=i;select(i);updateCue();if(resume)play();else status('將從第 '+(i+1)+' 小節開始。按 PLAY 或空白鍵播放。');}
-function stop({natural=false}={}){melodyPlayer.stop();run++;isPlaying=false;loading=false;clearTimeout(timer);timer=null;if(player){player.stop({natural});player=null;}else if(!natural)piano?.stop();$('play').textContent='PLAY';$('play').setAttribute('aria-pressed','false');updateCue();document.querySelectorAll('.playing,.sounding').forEach(el=>el.classList.remove('playing','sounding'));}
+function stop({natural=false}={}){melodyLab?.roll.setPlayhead(null);melodyPlayer.stop();run++;isPlaying=false;loading=false;clearTimeout(timer);timer=null;if(player){player.stop({natural});player=null;}else if(!natural)piano?.stop();$('play').textContent='PLAY';$('play').setAttribute('aria-pressed','false');updateCue();document.querySelectorAll('.playing,.sounding').forEach(el=>el.classList.remove('playing','sounding'));}
 let appliedTempo=clampTempo($('tempo').value);$('tempo').value=appliedTempo;
 function updateTempoHint(){
  if(melodyLab?.active){$('tempoHint').textContent='與旋律同步 · '+(melodyLab.kind==='audio'?'BPM 修正只改拍格，不拉伸原音。':melodyLab.tempoMap.length>1?'保留 MIDI 速度變化；請在旋律區切換固定 BPM。':'使用旋律速度；更改後重新從選定小節播放。');return;}
@@ -173,12 +173,12 @@ function refreshMelody(){
  $('length').disabled=true;
 }
 function importMelodyChange(kind){
- if(!melodyLab.active){$('length').disabled=false;$('tempo').disabled=false;bars=normalizeChart(bars,4);source=normalizeChart(source,4);syncStyleMode();syncInput();render();updateTempoHint();styleInfo();return;}
+ if(!melodyLab.active){if(kind==='new'||kind==='edit'){bars=[{chords:[]}];source=structuredClone(bars);startBar=selected=selectedChord=0;}$('length').disabled=false;$('tempo').disabled=false;bars=normalizeChart(bars,4);source=normalizeChart(source,4);syncStyleMode();syncInput();render();updateTempoHint();styleInfo();return;}
  $('key').value=melodyLab.key.root;$('mode').value=melodyLab.key.mode;$('mode').disabled=false;$('tempo').value=Number(melodyLab.bpm.toFixed(3));
  $('tempo').disabled=melodyLab.tempoMap.length>1;
  if(melodyLab.reviewRequired){bars=Array.from({length:Math.ceil(Math.max(...melodyLab.notes.map(n=>n.end))/barBeats())},()=>({chords:[]}));source=structuredClone(bars);}
- else if(kind==='import'||kind==='meter'){
-  checkpoint();const result=harmonize(melodyLab.notes,{key:melodyLab.key,beatsPerBar:barBeats(),policy:melodyLab.policy,style:'basic'});
+ else if(kind==='import'||kind==='meter'||kind==='edit'&&!bars.some(b=>b.chords?.length)){
+  checkpoint();const result=harmonize(melodyLab.notes,{key:melodyLab.key,beatsPerBar:barBeats(),harmonicGrid:.5,policy:melodyLab.policy,style:'basic'});
   bars=chartFromSegments(result.segments,barBeats(),result.totalBeats);source=structuredClone(bars);selected=selectedChord=startBar=0;
  }
  if((kind==='tempo'&&melodyLab.kind==='audio')||kind==='edit'){
@@ -192,16 +192,24 @@ async function playWithMelody(){
  try{
   const result=renderProtected(bars,$('pattern').value,performanceOptions(),melodyLab.notes);
   const started=await melodyPlayer.play({melody:melodyLab.notes,accompaniment:result.accompaniment,tempoMap:melodyLab.tempoMap,totalBeats:bars.length*barBeats(),sourceBuffer:melodyLab.buffer,offset:melodyLab.offset,mode:melodyLab.mode,instrument:melodyLab.instrument,melodyGain:melodyLab.mix.melody,harmonyGain:melodyLab.mix.harmony,startBeat:startBar*barBeats(),loop:$('loop').checked,
-   onTick:beat=>{const idx=Math.min(bars.length-1,Math.floor(beat/barBeats())),within=beat%barBeats();$('position').textContent='BAR '+(idx+1)+' / '+bars.length+' · BEAT '+(Math.floor(within)+1);$('position').dataset.beat=beat.toFixed(3);document.querySelectorAll('.bar').forEach((el,i)=>el.classList.toggle('playing',i===idx));document.querySelectorAll('.chord-event').forEach(el=>{let at=0;const list=chordList(bars[+el.dataset.bar]);for(let j=0;j<+el.dataset.chord;j++)at+=list[j].beats;el.classList.toggle('sounding',+el.dataset.bar===idx&&within>=at&&within<at+(list[+el.dataset.chord]?.beats||0));});},
-   onStop:()=>{isPlaying=false;loading=false;$('play').textContent='PLAY';$('play').setAttribute('aria-pressed','false');document.querySelectorAll('.playing,.sounding').forEach(el=>el.classList.remove('playing','sounding'));updateCue();}});
+   onTick:beat=>{melodyLab.roll.setPlayhead(beat);const idx=Math.min(bars.length-1,Math.floor(beat/barBeats())),within=beat%barBeats();$('position').textContent='BAR '+(idx+1)+' / '+bars.length+' · BEAT '+(Math.floor(within)+1);$('position').dataset.beat=beat.toFixed(3);document.querySelectorAll('.bar').forEach((el,i)=>el.classList.toggle('playing',i===idx));document.querySelectorAll('.chord-event').forEach(el=>{let at=0;const list=chordList(bars[+el.dataset.bar]);for(let j=0;j<+el.dataset.chord;j++)at+=list[j].beats;el.classList.toggle('sounding',+el.dataset.bar===idx&&within>=at&&within<at+(list[+el.dataset.chord]?.beats||0));});},
+   onStop:()=>{melodyLab.roll.setPlayhead(null);isPlaying=false;loading=false;$('play').textContent='PLAY';$('play').setAttribute('aria-pressed','false');document.querySelectorAll('.playing,.sounding').forEach(el=>el.classList.remove('playing','sounding'));updateCue();}});
   if(!started||token!==run)return;loading=false;isPlaying=true;$('play').textContent='STOP';$('play').setAttribute('aria-pressed','true');status('原版鋼琴 · 旋律 '+Math.round(melodyLab.mix.melody*100)+'% / 和聲 '+Math.round(melodyLab.mix.harmony*100)+'%');
  }catch(e){stop();status('試聽未完成：'+e.message);}
 }
+function harmonyFile(sustained=false){
+ if(melodyLab?.reviewRequired)throw Error('請先確認旋律，再匯出和弦伴奏。');
+ const result=renderProtected(bars,sustained?'sustain':$('pattern').value,performanceOptions(),melodyLab?.notes||[]);
+ if(!result.accompaniment.length)throw Error('尚無可匯出的和弦伴奏。');
+ const bytes=encodeAuditedMidi({includeMelody:false,melody:melodyLab?.notes||[],accompaniment:result.accompaniment,policy:melodyLab?.policy||'strict',tempoMap:melodyLab?.active?melodyLab.tempoMap:[{beat:0,bpm:+$('tempo').value}],meter:melodyLab?.active?melodyLab.meter:{numerator:4,denominator:4}});
+ return new File([bytes],'KHIMAIRA-2-'+(sustained?'sustain':$('pattern').value)+'-harmony.mid',{type:'audio/midi'});
+}
 function exportWithMelody(sustained){
- try{const result=renderProtected(bars,sustained?'sustain':$('pattern').value,performanceOptions(),melodyLab.notes);
- const bytes=encodeAuditedMidi({melody:melodyLab.notes,accompaniment:result.accompaniment,policy:melodyLab.policy,tempoMap:melodyLab.tempoMap,meter:melodyLab.meter});
- if(downloadURL)URL.revokeObjectURL(downloadURL);downloadURL=URL.createObjectURL(new Blob([bytes],{type:'audio/midi'}));const a=document.createElement('a');a.href=downloadURL;a.download='KHIMAIRA-2-'+(sustained?'sustain':$('pattern').value)+'-melody.mid';a.click();status('已匯出旋律＋和聲分軌 MIDI，保留速度圖與拍號。');
- }catch(e){status(e.message);}
+ try{const file=harmonyFile(sustained);if(downloadURL)URL.revokeObjectURL(downloadURL);downloadURL=URL.createObjectURL(file);const a=document.createElement('a');a.href=downloadURL;a.download=file.name;a.click();status('已匯出和弦伴奏 MIDI（不含參考旋律），保留速度圖與拍號。');}catch(e){status(e.message);}
+}
+for(const id of ['dockMidi','midi','midiSustain']){
+ const button=$(id);button.draggable=true;button.title='下載／拖曳和弦伴奏 MIDI，不含參考旋律';
+ button.addEventListener('dragstart',event=>{try{const file=harmonyFile(id==='midiSustain');if(downloadURL)URL.revokeObjectURL(downloadURL);downloadURL=URL.createObjectURL(file);event.dataTransfer.effectAllowed='copy';event.dataTransfer.items.add(file);event.dataTransfer.setData('DownloadURL','audio/midi:'+file.name+':'+downloadURL);status('拖出的是和弦伴奏；若 DAW 不接受瀏覽器拖曳，請下載後拖入。');}catch(error){event.preventDefault();status(error.message);}});
 }
 melodyLab=new MelodyWorkspace($('melodyWorkspace'),{onChange:importMelodyChange,onStop:()=>stop(),onMix:restart=>{if(restart){const playing=isPlaying;stop();if(playing)play();}else melodyPlayer.setMix(melodyLab.mix.melody,melodyLab.mix.harmony);}});
 window.addEventListener('pagehide',()=>{stop();melodyLab.worker?.terminate();});
