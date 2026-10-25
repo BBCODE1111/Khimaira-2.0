@@ -17,3 +17,5 @@
 .roll-note.dragging{cursor:grabbing}.roll-note.dragging .note-body{fill:#f3d9a7;stroke:#fff}
 .roll-note [data-edge]{cursor:ew-resize}.roll-note.selected [data-edge]{fill:#ffffff40}
 @media(max-width:600px){.roll-toolbar{gap:8px}.roll-toolbar label{flex:1}.roll-toolbar select{width:100%}.roll-toolbar button{flex:1;padding:9px 8px;font-size:12px}.melody-roll-scroll{height:300px}}
+
+.melody-review{border:1px solid #c9ab76;border-radius:5px;padding:16px;background:#3b302055;color:#ecd4ad;margin:12px 0}.melody-review p{font-size:13px;line-height:1.7}.melody-review button{background:#695139}

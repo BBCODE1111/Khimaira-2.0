@@ -4,7 +4,7 @@ export const releaseSeconds=duration=>Math.min(.12,Math.max(.004,duration*.2));
 export class Piano {
  constructor(context){this.context=context||new (window.AudioContext||window.webkitAudioContext)();this.buffers=new Map;this.active=new Set;this.master=this.context.createGain();this.master.gain.value=.68;const compressor=this.context.createDynamicsCompressor();compressor.threshold.value=-14;compressor.ratio.value=3;this.master.connect(compressor).connect(this.context.destination);this.ready=null;}
  async load(){await this.context.resume();if(!this.ready)this.ready=Promise.all(sampleNotes.map(async note=>{const r=await fetch(new URL('./audio/'+sampleName(note)+'.mp3',import.meta.url));if(!r.ok)throw Error('Piano sample unavailable');const buffer=await this.context.decodeAudioData(await r.arrayBuffer());this.buffers.set(note,buffer);})).catch(e=>{this.ready=null;throw e;});return this.ready;}
- note(note,when,duration,velocity,{strict=false}={}){
+ note(note,when,duration,velocity,{strict=false,release:tail}={}){
   const ctx=this.context,key=sampleNotes.reduce((a,b)=>Math.abs(b-note)<Math.abs(a-note)?b:a);
   const source=ctx.createBufferSource(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();
   source.buffer=this.buffers.get(key);source.playbackRate.value=2**((note-key)/12);
@@ -13,7 +13,7 @@ export class Piano {
   const voice={note,when,end:when+duration,ended:false,releaseEnd:when+duration+releaseSeconds(duration)};
   const release=(end,seconds)=>{
    voice.end=end;voice.releaseEnd=strict?end:end+releaseSeconds(seconds);
-   if(strict){const release=Math.min(.05,seconds*.2);gain.gain.setValueAtTime(amp,Math.max(when+attack,end-release));gain.gain.linearRampToValueAtTime(0,end);}
+   if(strict){const release=tail===undefined?Math.min(.05,seconds*.2):Math.min(seconds*.5,Math.max(.008,tail));gain.gain.setValueAtTime(amp,Math.max(when+attack,end-release));gain.gain.linearRampToValueAtTime(0,end);}
    else{gain.gain.setValueAtTime(amp,end);gain.gain.exponentialRampToValueAtTime(.0001,voice.releaseEnd);}
    source.stop(voice.releaseEnd+.005);
   };

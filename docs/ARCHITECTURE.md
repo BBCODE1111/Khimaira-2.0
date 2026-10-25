@@ -5,7 +5,7 @@ The website is dependency-free ES modules. There is no server-side audio process
 | Module | Responsibility |
 | --- | --- |
 | `midi.js` | Bounded SMF parser, sustain handling, per-track/channel notes, tempo map conversions, type-1 writer at PPQ 960 |
-| `analysis.js` / `analysis-worker.js` | YIN pitch, median filtering, RMS onset/release refinement, repeated-note segmentation, heuristic BPM alternatives, duration-weighted key profiles |
+| `analysis.js` / `analysis-worker.js` | Retained legacy YIN pitch, median filtering, RMS onset/release refinement, repeated-note segmentation, heuristic BPM alternatives, duration-weighted key profiles |
 | `harmony.js` | Chord candidate compatibility, adaptive phrase splitting, dynamic-programming path selection, actual-note audit |
 | `engine/` | Existing KHIMAIRA harmony vocabulary, voicing and performance patterns, reused as local source |
 | `export.js` | Encode, reparse, audit exact MIDI timing before download |
@@ -18,15 +18,15 @@ The website is dependency-free ES modules. There is no server-side audio process
 
 All musical positions use quarter-note beats, regardless of displayed meter. Audio transcription retains seconds; beats are `(seconds - firstBeatOffset) * BPM / 60`. Changing audio BPM does not alter the original buffer. MIDI playback integrates its full piecewise tempo map. Exports preserve that map unless a fixed-tempo override is selected.
 
-Generated events are clipped to their vetted harmonic span. Browser synth releases end at note-off. Imported MIDI sustain is expanded into sounding note lengths. External instruments may add tails, modulation or tuning and require separate listening checks.
+Generated events are clipped to their vetted harmonic span. Melody synth releases end at note-off. Harmony sample releases may extend within the audited compatibility window. Imported MIDI sustain is expanded into sounding note lengths. External instruments may add tails, modulation or tuning and require separate listening checks.
 
 ## Harmony contract
 
-Allowed interval classes relative to every simultaneous melody note: `{0, 3, 4, 5, 7, 8, 9}`. This is a conservative product policy, not a universal definition of consonance. Chord extensions can still contain internal tension; the guarantee concerns accompaniment against the melody.
+Strict mode allows interval classes `{0, 3, 4, 5, 7, 8, 9}` relative to every simultaneous melody note. Alpha 4 adds the explicitly labelled musical-color mode (UI default), which also permits `{2, 10}` while rejecting semitones and tritones. The same selected policy is passed to chord search, performance repair, audible release checks and re-parsed MIDI auditing. This is a conservative product policy, not a universal definition of consonance. Chord extensions can still contain internal tension; the guarantee concerns accompaniment against the melody.
 
 The candidate pool is a set of conventional chord qualities across 12 roots. Prefer full chords, then split on actual note boundaries if none fit. At the minimum span or split-depth limit, use a compatible reduced chord or silence. A dynamic-programming path balances melody chord tones, key membership, shared notes, root motion and seeded style preferences. Render each span with existing performance patterns, clip durations, then reject any failed actual-note audit.
 
-The strict mode intentionally does not allow passing-tone exceptions or unresolved extensions. Future relaxed modes must be opt-in and must not silently weaken this contract.
+The strict mode intentionally does not allow passing-tone exceptions or unresolved extensions. The selected policy must remain explicit in the UI and in the audit label; zero hard clashes in musical-color mode does not claim zero musical tension.
 
 ## References
 
@@ -34,7 +34,7 @@ The strict mode intentionally does not allow passing-tone exceptions or unresolv
 - Web Audio decoding and complete-file requirements: https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/decodeAudioData
 - MIDI tempo and PPQ timing: https://learn.microsoft.com/en-us/windows/win32/multimedia/timing-information
 
-Key inference uses standard Krumhansl major/minor pitch-class profiles as a heuristic, with a small final-tonic preference. No trained model or third-party recording is bundled. The example melody and rendered WAV were generated for this project.
+Key inference uses standard Krumhansl major/minor pitch-class profiles as a heuristic, with a small final-tonic preference. The Apache-2.0 Basic Pitch model is bundled as of alpha 4; no third-party source recordings are bundled. The example melody and rendered WAV were generated for this project.
 
 ## Legacy compatibility boundary
 
@@ -50,3 +50,14 @@ Reference-scale and guitar-chord-melody audition remain separate tools; they do 
 `piano-roll.js` owns SVG pointer capture, pitch/time coordinates, scrollable 128-semitone rows, sticky piano/ruler, snap/zoom, selection and keyboard gestures. Pointer movement changes only the preview; pointer release commits one immutable note snapshot. Escape, pointer cancellation and window blur restore the preview. Released-pointer hit testing preserves double-click editing despite capture retargeting. Pure vertical moves preserve imported microtiming; both resize edges preserve the opposite edge.
 
 `note-edit.js` provides bounded coordinate transforms and a 50-snapshot note undo/redo history. `MelodyWorkspace.commitNotes` validates the entire result, snapshots prior notes, synchronizes audio-derived seconds, stops playback and triggers the existing `edit` integration path. `protectChart` and `renderProtected` then refresh the accompaniment; playback/export consume the same edited notes. New import/track resets history and viewport; tempo/offset regridding clears old beat-based history. Audio edits select detected-note audition and explicitly distinguish the untouched source waveform.
+
+
+## Alpha 4 repairs
+
+`neural-worker.js` resamples at its boundary (workspace supplies mono 22,050 Hz), calls the vendored Basic Pitch / TensorFlow WASM runtime, and passes activations to `transcription.js`. A dominant-line dynamic-programming decoder penalizes brief pitch jumps, bridges short same-pitch dropouts and preserves strong new onsets. Model tensor scopes are disposed per window and the worker is terminated at completion/cancel. No source recordings, recording-derived activations or licensed sample-pack audio are committed.
+
+`sourceHints` recognizes conventional BPM and explicit major/minor tokens in filenames. The workspace tracks file/estimate/manual provenance separately, keeps labelled loop silence at beat zero, and requires an audio review action before automatic accompaniment. These labels do not constrain or rewrite predicted pitches. Unlabelled freely sung phrases retain BPM/key ambiguity; TAP and manual values remain available.
+
+`rewriteWithMelody` searches safe half-bar harmony spans using the original style's qualities and candidate preferences, with a penalty for repeating the previous displayed choices. `applyMutation` retries based on the final rendered chord chart, not the pre-protection candidate. Strict mode retains its original interval contract; musical-color mode uses the separately displayed wider interval set.
+
+`renderProtected` replaces unsafe ornaments with nearest safe chord tones where possible, otherwise clips only the conflicting remainder. Duplicate attacks are consolidated. Adjacent held common tones tie across boundaries; rhythmic attacks remain independent. A short natural piano release is bounded by the next conflicting melody, same-pitch reattack and score end; the extended audible events also reach MIDI auditing. Playback carries `gateEnd` separately to shape the release. `melody-synth.js` provides deterministic harmonic waveforms, low-pass filtering and short-note-safe envelopes without pitch-obscuring detune.

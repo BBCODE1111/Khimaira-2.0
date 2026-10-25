@@ -1,6 +1,6 @@
-import { parse } from './engine/music.js?v=2.0.0-alpha.3';
-import { performance } from './engine/performance.js?v=2.0.0-alpha.3';
-import { mod, noteNames } from './analysis.js?v=2.0.0-alpha.3';
+import { parse } from './engine/music.js?v=2.0.0-alpha.4';
+import { performance } from './engine/performance.js?v=2.0.0-alpha.4';
+import { mod, noteNames } from './analysis.js?v=2.0.0-alpha.4';
 
 export const styles = {
   basic: { label: '基本和弦', pattern: 'sustain', qualities: ['', 'm', 'sus2', 'sus4'], voicing: 'close', description: '先建立清楚的三和弦與穩定長音。' },
@@ -15,7 +15,8 @@ export const styles = {
 
 export const safeIntervals = new Set([0, 3, 4, 5, 7, 8, 9]);
 export const overlaps = (a, b) => Math.min(a.end, b.end) - Math.max(a.start, b.start) > 1e-7;
-export const compatible = (pitch, melodyPitch) => safeIntervals.has(mod(pitch - melodyPitch));
+export const musicalIntervals = new Set([0,2,3,4,5,7,8,9,10]);
+export const compatible = (pitch, melodyPitch, policy='strict') => (policy==='musical'?musicalIntervals:safeIntervals).has(mod(pitch - melodyPitch));
 export function validateMelody(notes) {
   if (!notes.length) throw Error('請先匯入旋律或載入範例。');
   if (notes.length > 2000) throw Error('第一版最多 2,000 個旋律音，請先截成較短片段。');
@@ -31,28 +32,28 @@ function candidatePool(style) {
   }
   return out;
 }
-function candidatesFor(start, end, melody, pool) {
+function candidatesFor(start, end, melody, pool, policy) {
   const notes = melody.filter(n => overlaps(n, { start, end }));
-  return pool.filter(c => c.pcs.every(p => notes.every(n => compatible(p, n.pitch))));
+  return pool.filter(c => c.pcs.every(p => notes.every(n => compatible(p, n.pitch, policy))));
 }
 
-export function auditHarmony(melody, accompaniment) {
+export function auditHarmony(melody, accompaniment, {policy='strict'}={}) {
   const conflicts = [];
   for (const h of accompaniment) for (let i = 0; i < melody.length; i++) {
     const m = melody[i];
-    if (overlaps(h, m) && !compatible(h.pitch, m.pitch)) conflicts.push({ melodyIndex: i, melodyPitch: m.pitch, harmonyPitch: h.pitch, start: Math.max(m.start, h.start), end: Math.min(m.end, h.end), interval: mod(h.pitch - m.pitch) });
+    if (overlaps(h, m) && !compatible(h.pitch, m.pitch, policy)) conflicts.push({ melodyIndex: i, melodyPitch: m.pitch, harmonyPitch: h.pitch, start: Math.max(m.start, h.start), end: Math.min(m.end, h.end), interval: mod(h.pitch - m.pitch) });
   }
   return conflicts;
 }
 
-export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: styleId = 'basic', seed = 0, beatsPerBar = 4, qualities = null, preferred = [] } = {}) {
+export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: styleId = 'basic', seed = 0, beatsPerBar = 4, qualities = null, preferred = [], spanBeats = beatsPerBar, avoid = [], policy='strict' } = {}) {
   validateMelody(melody);
   if (!(beatsPerBar > 0 && beatsPerBar <= 32)) throw Error('不支援這個拍號。');
   const cfg = { ...(styles[styleId] || styles.basic), ...(qualities ? { qualities } : {}) }, pool = candidatePool(cfg), rng = random(seed);
   const scale = scaleOf(key), last = Math.max(...melody.map(n => n.end)), totalBeats = Math.ceil(last / beatsPerBar) * beatsPerBar;
   const pieces = [];
   function split(start, end, depth = 0) {
-    const candidates = candidatesFor(start, end, melody, pool);
+    const candidates = candidatesFor(start, end, melody, pool, policy);
     const full = candidates.filter(c => c.pcs.length >= 3);
     if (full.length || end - start <= .125 || depth >= 12) { pieces.push({ start, end, candidates: full.length ? full : candidates }); return; }
     // Preserve long harmonic spans where possible; split at real note boundaries only when necessary.
@@ -61,7 +62,8 @@ export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: sty
     const middle = boundaries.reduce((a, b) => Math.abs(b - (start + end) / 2) < Math.abs(a - (start + end) / 2) ? b : a);
     split(start, middle, depth + 1); split(middle, end, depth + 1);
   }
-  for (let start = 0; start < totalBeats - 1e-7; start += beatsPerBar) split(start, Math.min(totalBeats, start + beatsPerBar));
+  const step=Math.max(.5,Math.min(beatsPerBar,spanBeats));
+  for (let start = 0; start < totalBeats - 1e-7; start += step) split(start, Math.min(totalBeats, start + step));
   const scored = pieces.map((piece, index) => {
     const active = melody.filter(n => overlaps(n, piece));
     if (!piece.candidates.length) return [{ symbol: 'N.C.', root: key.root, pcs: [], cost: 12, q: '' }];
@@ -75,7 +77,8 @@ export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: sty
       const wanted = preferred.find(s => overlaps(s,piece));
       const original = wanted && parse(wanted.symbol);
       const preference = original ? (original.root === chord.root ? -.65 : .2) - chord.pcs.filter(p=>original.pcs.includes(p)).length*.1 : 0;
-      return { ...chord, cost: preference + outOfKey * 1.1 + (1 - inChord) * 2 + color - tonic + (chord.pcs.length < 3 ? 2.4 : 0) + (styleId === 'basic' ? 0 : rng() * 1.3) };
+      const repeated=avoid.some(s=>s.symbol===chord.symbol&&overlaps(s,piece))?1.35:0;
+      return { ...chord, cost: repeated + preference + outOfKey * 1.1 + (1 - inChord) * 2 + color - tonic + (chord.pcs.length < 3 ? 2.4 : 0) + (styleId === 'basic' ? 0 : rng() * 1.3) };
     }).sort((a, b) => a.cost - b.cost).slice(0, 16);
   });
   let costs = scored[0].map(c => c.cost), paths = scored[0].map((_, i) => [i]);
@@ -110,10 +113,10 @@ export function harmonize(melody, { key = { root: 0, mode: 'major' }, style: sty
     }
   }
   // Some patterns add octave/bass ornaments; audit the ACTUAL rendered events, not labels.
-  const conflicts = auditHarmony(melody, accompaniment);
+  const conflicts = auditHarmony(melody, accompaniment,{policy});
   if (conflicts.length) throw Error('伴奏音程檢查未通過，已取消這次生成。');
   const gaps = segments.filter(s => s.symbol === 'N.C.').length;
-  return { segments, accompaniment, totalBeats, style: styleId, key, seed, conflicts, gaps, splitCount: segments.length - Math.ceil(totalBeats / beatsPerBar), safety: 'strict-consonance-v1' };
+  return { segments, accompaniment, totalBeats, style: styleId, key, seed, conflicts, gaps, splitCount: segments.length - Math.ceil(totalBeats / beatsPerBar), safety:policy==='musical'?'musical-color-v1':'strict-consonance-v1' };
 }
 
 export function demoMelody() {

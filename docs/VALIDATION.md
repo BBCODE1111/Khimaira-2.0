@@ -1,3 +1,20 @@
+# Real-audio and playback repairs · 2.0.0-alpha.4
+
+97 automated tests passed. Added regression coverage for filename provenance and leading rests, pitch-path smoothing with retained chromatic tones/rests/repeated attacks, final-chart diversity across styles and repeated generation, retained ornament attack positions, tied common tones vs rhythmic reattacks, bounded natural releases, short-note synth envelopes, and both explicit compatibility policies through re-parsed MIDI export.
+
+Browser validation used the original 48-second wet vocal shown in the user's recording, processed locally only. Baseline YIN reproduced about 150 fragments, 197.5 BPM and Gb minor. The new model/decoder produced 81 notes; metadata retained the file's 80 BPM and D-major label, with leading silence at beat zero. These labels are source metadata, not an acoustic accuracy result. The independent acoustic key suggestion remains ambiguous and differs from the source label.
+
+- Actual file chooser → decode at 22,050 Hz → WASM worker → audio review panel; no accompaniment generated until confirmation.
+- Original synthetic WAV still returns all 32 notes including the final repeated pitch, at 108 BPM. Removing a redundant decode/resample pass fixed a repeated-note regression found during browser QA.
+- Actual UI selections Jazz → Rock → House → Bossa and GENERATE changed the displayed chord sequences. The complete 48-style safety regression is retained.
+- On the wet-vocal fixture, selected musical-color harmony used 41 segments instead of roughly 82 strict segments; the reduction reflects the explicit interval policy, not a claim of greater transcription accuracy.
+- Downloaded MIDI independently decoded: 81 melody notes, 244 accompaniment notes, 80 BPM, zero half-step/tritone conflicts under the selected musical-color rule.
+- Strict/musical policy switching updates the audit label; original-audio playback, Warm lead / Soft keys switching and transport start/stop completed without console errors.
+
+Pitch accuracy for the wet vocal has not been measured against an independently annotated score. Subjective timbre, groove and original-waveform alignment still require listening; automated scheduling checks are not a human listening evaluation. No user recordings or their frame activations are included in the repository.
+
+---
+
 # MIDI editing validation · 2026-10-25 · 2.0.0-alpha.3
 
 87 automated tests passed, retaining all 80 alpha 2 tests. New coverage: snapped and free movement, preserved imported microtiming/velocity/confidence, pitch and timeline bounds, resizing both ends without inverted duration, triplet creation, snapshot independence/undo/redo/history branching, cross-bar and chromatic edits with protected accompaniment and MIDI round trip.
