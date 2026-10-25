@@ -26,7 +26,7 @@ for(const groupName of ['現代流行與和聲','黑暗／重型與另類','跨�
 let statusTimer;const status=s=>{clearTimeout(statusTimer);$('status').textContent=s;statusTimer=setTimeout(()=>{$('status').textContent='';},6500);};
 const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 names.forEach((n,i)=>$('key').add(new Option(n,i)));
-try{const old=JSON.parse(localStorage.getItem('khimaira-v2-fusion')||'null');if(old&&old.bars?.length<=128){bars=old.bars.map(b=>({...b,chords:chordList(b)}));source=old.source||structuredClone(bars);for(const id of settings)if(old[id]!=null)$(id).value=old[id];const legacyArp={arpUp:'up',arpDown:'down',arpBounce:'upDown',arpRandom:'random',arpOctave:'up'};if(legacyArp[old.pattern]){$('pattern').value='arp';$('arpMode').value=legacyArp[old.pattern];$('arpRate').value=String(4/Number(old.rate||.5));$('arpOctaves').value=old.pattern==='arpOctave'?'2':'1';}if(!$('pattern').value)$('pattern').value='ballad';}}catch{}
+try{const old=JSON.parse(localStorage.getItem('khimaira-v2-fusion')||'null');if(old&&old.bars?.length<=128){bars=normalizeChart(old.bars.map(b=>({...b,chords:chordList(b)})),4);source=normalizeChart(old.source||structuredClone(bars),4);for(const id of settings)if(old[id]!=null)$(id).value=old[id];const legacyArp={arpUp:'up',arpDown:'down',arpBounce:'upDown',arpRandom:'random',arpOctave:'up'};if(legacyArp[old.pattern]){$('pattern').value='arp';$('arpMode').value=legacyArp[old.pattern];$('arpRate').value=String(4/Number(old.rate||.5));$('arpOctaves').value=old.pattern==='arpOctave'?'2':'1';}if(!$('pattern').value)$('pattern').value='ballad';}}catch{}
 function save(){try{localStorage.setItem('khimaira-v2-fusion',JSON.stringify({bars,source,...Object.fromEntries(settings.map(id=>[id,$(id).value]))}));}catch{status('無法儲存於瀏覽器。');}}
 function checkpoint(){history.push(structuredClone(bars));if(history.length>30)history.shift();}
 function invalidateMelody(){arrangement=[];$('melodyGrid').replaceChildren();$('melodyNote').textContent='和弦已更新，按 Generate 產生這組進行的頂聲部按法。';}
@@ -155,7 +155,7 @@ $('midi').onclick=()=>exportMidi();$('midiSustain').onclick=()=>exportMidi(true)
 
 function mutationSource(){
  const cleaned=source.map(b=>({...b,chords:chordList(b).filter(c=>parse(c.symbol))}));
- return melodyLab?.active?normalizeChart(cleaned,4):source;
+ return melodyLab?.active?normalizeChart(cleaned,4):cleaned;
 }
 function refreshMelody(){
  if(!melodyLab?.active)return;
