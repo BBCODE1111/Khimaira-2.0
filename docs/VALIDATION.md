@@ -1,3 +1,21 @@
+# MIDI editing validation · 2026-10-25 · 2.0.0-alpha.3
+
+87 automated tests passed, retaining all 80 alpha 2 tests. New coverage: snapped and free movement, preserved imported microtiming/velocity/confidence, pitch and timeline bounds, resizing both ends without inverted duration, triplet creation, snapshot independence/undo/redo/history branching, cross-bar and chromatic edits with protected accompaniment and MIDI round trip.
+
+Local browser checks use real pointer drags and keyboard input:
+
+- E4 at beat 0 → Gb4 at beat 0.5; duration retained at 0.9 beats.
+- Drag right edge to 1.5-beat duration; undo resize and undo move restore original note; redo reapplies edit.
+- Double-click a note opens numeric editor without creating an extra note; blank double-click adds a note; Delete removes it.
+- 200% zoom doubles the displayed duration width; note selection survives redraw.
+- WAV example analysis → original-audio audition → pitch edit switches to edited-note audition and displays source-audio notice.
+- Downloaded MIDI independently parsed: first melody note F4 (MIDI 65), 32 melody notes and 93 accompaniment notes, zero forbidden overlapping intervals.
+- No browser console errors in tested editing flow.
+
+These checks cover the implemented single-note editor, not full DAW parity or source-waveform pitch/time processing.
+
+---
+
 # Fusion validation · 2026-10-25 · 2.0.0-alpha.2
 
 80 automated tests passed, including the retained alpha 1 suite and copied v1 regression suites.

@@ -1,7 +1,7 @@
-import { parse } from './music.js?v=2.0.0-alpha.2';
-import { styles as legacyStyles } from './style-engine.js?v=2.0.0-alpha.2';
-import { harmonize, auditHarmony, compatible, overlaps } from './harmony.js?v=2.0.0-alpha.2';
-import { performance } from './performance.js?v=2.0.0-alpha.2';
+import { parse } from './music.js?v=2.0.0-alpha.3';
+import { styles as legacyStyles } from './style-engine.js?v=2.0.0-alpha.3';
+import { harmonize, auditHarmony, compatible, overlaps } from './harmony.js?v=2.0.0-alpha.3';
+import { performance } from './performance.js?v=2.0.0-alpha.3';
 
 export const barLength = meter => (meter?.numerator || 4) * 4 / (meter?.denominator || 4);
 export function normalizeChart(chart, beats = 4) {

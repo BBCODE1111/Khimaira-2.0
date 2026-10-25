@@ -43,3 +43,10 @@ Without an imported melody, original mutations, voice planning, performance, sam
 Volume: one melody bus defaults to 0.35 and a separate piano master retains its original 0.68 at harmony 100%. Melody sine amplitude is reduced from alpha 1; original audio is normalized downward only. Slider input updates gain targets without restarting playback.
 
 Reference-scale and guitar-chord-melody audition remain separate tools; they do not play the imported melody simultaneously and do not carry its compatibility claim. Imported melody is included in the main score MIDI exports.
+
+
+## Direct note editing (alpha 3)
+
+`piano-roll.js` owns SVG pointer capture, pitch/time coordinates, scrollable 128-semitone rows, sticky piano/ruler, snap/zoom, selection and keyboard gestures. Pointer movement changes only the preview; pointer release commits one immutable note snapshot. Escape, pointer cancellation and window blur restore the preview. Released-pointer hit testing preserves double-click editing despite capture retargeting. Pure vertical moves preserve imported microtiming; both resize edges preserve the opposite edge.
+
+`note-edit.js` provides bounded coordinate transforms and a 50-snapshot note undo/redo history. `MelodyWorkspace.commitNotes` validates the entire result, snapshots prior notes, synchronizes audio-derived seconds, stops playback and triggers the existing `edit` integration path. `protectChart` and `renderProtected` then refresh the accompaniment; playback/export consume the same edited notes. New import/track resets history and viewport; tempo/offset regridding clears old beat-based history. Audio edits select detected-note audition and explicitly distinguish the untouched source waveform.

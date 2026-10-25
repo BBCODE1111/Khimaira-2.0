@@ -1,5 +1,5 @@
-import {beatToSeconds,secondsToBeat} from './midi.js?v=2.0.0-alpha.2';
-import {Piano} from './piano.js?v=2.0.0-alpha.2';
+import {beatToSeconds,secondsToBeat} from './midi.js?v=2.0.0-alpha.3';
+import {Piano} from './piano.js?v=2.0.0-alpha.3';
 export class MelodyPlayer {
  constructor(){this.context=null;this.playing=false;this.generation=0;this.voices=new Set();this.sources=new Set();this.timer=null;}
  async unlock(){this.context ||=new (window.AudioContext||window.webkitAudioContext)();await this.context.resume();this.piano ||=new Piano(this.context);await this.piano.load();this.melodyBus ||=this.context.createGain();if(!this.connected){this.melodyBus.connect(this.context.destination);this.connected=true;}return this.context;}
