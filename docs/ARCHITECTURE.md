@@ -1,4 +1,4 @@
-# Architecture · Alpha 5
+# Architecture · Alpha 6
 
 The workbench uses native ES modules; the audio transcription worker uses a bundled Basic Pitch / TensorFlow runtime. There is no server-side audio processing.
 
@@ -65,3 +65,11 @@ Reference-scale and guitar-chord-melody audition remain separate tools; they do 
 ## Alpha 5 editor
 
 PianoRoll owns an index selection set and transient pointer gesture. Marquee, move, resize and draw previews do not mutate the project until pointer-up; one gesture is one history step. Group movement uses one bounded delta so it preserves relative timing and intervals at pitch/timeline limits. Empty melodies are editable and undoable; pure harmony generation still requires a nonempty reference. Touch uses explicit select/draw/erase/pan tools, a sticky horizontally scrollable toolbar and shared nudge actions. Numerical editing remains optional.
+
+## Alpha 6 melody-first arrangement
+
+`melody-arranger.js` scores diatonic core triads against duration-weighted phrase coverage, represented core tones and root presence. The workbench's basic rebuild and style GENERATE use that core, with a half-bar split only when materially improved melodic coverage supports a different arrival. Safe style colors preserve the core root and tones (power chords may omit the third). Previous colors may be avoided on explicit GENERATE; quick comparisons are deterministic. Legacy advanced harmonic mutations remain separate.
+
+With `followMelody` enabled in workbench performance options, meter anchors and melodic harmonic arrivals augment the genre template; dense phrases reduce weak-subdivision velocities. Sustained textures retain held notes. Every actual event still passes the chosen interval audit and the accompaniment-only export contract.
+
+Piano buffers store a bounded 2%-of-local-peak attack offset; melody-mode `Piano.note` starts at that offset. Both melody and harmony now reach the same compressor input, so the compressor lookahead does not delay only the piano. V1-only calls retain the original source offset.

@@ -1,9 +1,9 @@
-import {playMelodyTone} from './melody-synth.js?v=2.0.0-alpha.5';
-import {beatToSeconds,secondsToBeat} from './midi.js?v=2.0.0-alpha.5';
-import {Piano} from './piano.js?v=2.0.0-alpha.5';
+import {playMelodyTone} from './melody-synth.js?v=2.0.0-alpha.6';
+import {beatToSeconds,secondsToBeat} from './midi.js?v=2.0.0-alpha.6';
+import {Piano} from './piano.js?v=2.0.0-alpha.6';
 export class MelodyPlayer {
  constructor(){this.context=null;this.playing=false;this.generation=0;this.voices=new Set();this.sources=new Set();this.timer=null;}
- async unlock(){this.context ||=new (window.AudioContext||window.webkitAudioContext)();await this.context.resume();this.piano ||=new Piano(this.context);await this.piano.load();this.melodyBus ||=this.context.createGain();if(!this.connected){this.melodyBus.connect(this.context.destination);this.connected=true;}return this.context;}
+ async unlock(){this.context ||=new (window.AudioContext||window.webkitAudioContext)();await this.context.resume();this.piano ||=new Piano(this.context);await this.piano.load();this.melodyBus ||=this.context.createGain();if(!this.connected){this.melodyBus.connect(this.piano.mixInput||this.context.destination);this.connected=true;}return this.context;}
  setMix(melody=.35,harmony=1){if(this.melodyBus)this.melodyBus.gain.setTargetAtTime(melody,this.context.currentTime,.015);if(this.piano)this.piano.master.gain.setTargetAtTime(.68*harmony,this.context.currentTime,.015);}
  setLoop(enabled){this.loop=enabled;if(enabled)this.stopCycle=Infinity;if(!enabled){const now=this.context.currentTime;this.stopCycle=Math.floor(Math.max(0,now-this.origin)/this.cycleSeconds)+1;for(const source of this.sources)if(source.startTime>=this.origin+this.stopCycle*this.cycleSeconds){try{source.stop();}catch{}}}}
  tone(note,when,duration){return playMelodyTone(this.context,this.melodyBus,this.voices,note,when,duration,this.instrument);}
@@ -26,7 +26,7 @@ export class MelodyPlayer {
      audioCycles.add(c);const delay=Math.max(0,now-origin),bufferOffset=offset+startSeconds+delay;
      if(bufferOffset<sourceBuffer.duration){const s=this.context.createBufferSource(),g=this.context.createGain();s.buffer=sourceBuffer;g.gain.value=sourceGain;s.connect(g).connect(this.melodyBus);s.startTime=origin;this.sources.add(s);s.start(Math.max(now,origin),bufferOffset,Math.min(sourceBuffer.duration-bufferOffset,this.cycleSeconds-delay));s.onended=()=>{this.sources.delete(s);s.disconnect();g.disconnect();};}
     }
-    for(let i=0;i<events.length;i++){const n=events[i],key=c+':'+i,when=Math.max(now,origin+n.seconds),end=origin+n.endSeconds;if(end<=now||origin+n.seconds>now+.16||scheduled.has(key))continue;scheduled.set(key,end);if(end-when<.002)continue;if(n.melody)this.tone(n,when,end-when);else this.piano.note(n.pitch,when,end-when,n.velocity,{strict:true,...(n.releaseSeconds===undefined?{}:{release:n.releaseSeconds})});}
+    for(let i=0;i<events.length;i++){const n=events[i],key=c+':'+i,when=Math.max(now,origin+n.seconds),end=origin+n.endSeconds;if(end<=now||origin+n.seconds>now+.16||scheduled.has(key))continue;scheduled.set(key,end);if(end-when<.002)continue;if(n.melody)this.tone(n,when,end-when);else this.piano.note(n.pitch,when,end-when,n.velocity,{strict:true,alignAttack:true,...(n.releaseSeconds===undefined?{}:{release:n.releaseSeconds})});}
    }
    const beat=secondsToBeat(startSeconds+elapsed%this.cycleSeconds,tempoMap);onTick(beat);
   };

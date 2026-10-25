@@ -1,3 +1,17 @@
+# Basic phrase accompaniment · 2.0.0-alpha.6
+
+112 automated tests pass. New acceptance checks use the original eight-bar quarter-note melody: eight basic genres × 12 keys retain the inferred C–Am–F–G function and G–C cadence; five variations preserve roots; actual rendered notes support every bar downbeat and non-ambient strong beats without discarded attacks. Seven or more distinct rhythm/duration signatures remain. A changed melody changes harmony; dense phrases lower subdivision velocities. All 48 retained style definitions also pass melody-first baseline generation, rendering and harmony-only MIDI export. Shared-clock scheduling is checked through two loop cycles and a variable tempo map.
+
+Actual Web Audio rendering (44.1 kHz, native OfflineAudioContext, all 17 original sampled-piano buffers, production melody synthesizer, production performance events) completed for Pop, Rock, Jazz, Bossa, House, Classical, Lo-fi and Ambient. All full-phrase buffers were finite; maximum mix peaks ranged 0.141–0.224, below clipping. None of these eight baseline arrangements removed an attack for compatibility. These are signal and musical-structure checks, not a human preference rating.
+
+Measured first C4 piano onset after the scheduled time: 19.27ms without sample alignment, 7.80ms after alignment. Melody through the shared compressor: 6.39ms. Relative onset difference in this controlled example is 1.41ms. Per-sample measured lead-ins range 4.78–15.74ms. These numbers do not include device playback latency and do not certify every pitch, instrument, or recording.
+
+Audio onset regression also covers 0.05-beat early detections: phrase boundaries tolerate tiny cross-bar slivers when inferring chord labels, while actual accompaniment retains exact-time conflict auditing. A late conflicting onset trims only the performed note tail instead of replacing a correct chord tone throughout the bar. Final G–C arrivals have full harmony support.
+
+Browser checks: both the 32-note MIDI demo and decoded WAV demo retain C–Am–F–G functions across all eight genres at 108 BPM. Load MIDI demo, select each of eight quick comparison buttons, inspect eight-bar charts with one G–C half-bar cadence and intact 108 BPM; playback starts using the sample-aligned path without console errors. Basic rebuild starts with straight timing, rather than inheriting arbitrary stored humanization. Quick comparisons use deterministic genre colors; explicit GENERATE changes compatible color choices. Existing editor and accompaniment-only export behavior are retained.
+
+---
+
 # Rhythm, direct editing and accompaniment-only export · 2.0.0-alpha.5
 
 104 automated tests passed, retaining the 97 alpha 4 checks. New regressions assert identical groove events when a chord is subdivided, unchanged bar attack positions through fractional chord boundaries in 3/4, 4/4 and 6-quarter-note bars, half-beat harmonic repair boundaries, shared group movement/clamping/resizing, reverse marquee intersection, undo from an empty phrase, physically absent melody tracks, and inward MIDI rounding against an untouched audio reference.

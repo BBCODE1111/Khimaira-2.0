@@ -1,6 +1,6 @@
-import { parse } from './engine/music.js?v=2.0.0-alpha.5';
-import { performance } from './engine/performance.js?v=2.0.0-alpha.5';
-import { mod, noteNames } from './analysis.js?v=2.0.0-alpha.5';
+import { parse } from './engine/music.js?v=2.0.0-alpha.6';
+import { performance } from './engine/performance.js?v=2.0.0-alpha.6';
+import { mod, noteNames } from './analysis.js?v=2.0.0-alpha.6';
 
 export const styles = {
   basic: { label: '基本和弦', pattern: 'sustain', qualities: ['', 'm', 'sus2', 'sus4'], voicing: 'close', description: '先建立清楚的三和弦與穩定長音。' },
