@@ -1,0 +1,20 @@
+{
+  "url": "http://localhost:5180/",
+  "checks": [
+    "floor quantize all",
+    "selected only",
+    "duration and velocity",
+    "undo",
+    "Q shortcut",
+    "FREE disables Q",
+    "PLAY ignores cue and restarts",
+    "STOP",
+    "PLAY while playing restarts",
+    "Space toggle",
+    "Space in inputs",
+    "icons",
+    "chord-only restart",
+    "mobile Q and width"
+  ],
+  "errors": []
+}

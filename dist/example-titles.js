@@ -1,4 +1,4 @@
-import {darkStudyMoods} from './dark-styles.js?v=2.0.0-alpha.7';
+import {darkStudyMoods} from './dark-styles.js?v=2.0.0-alpha.9';
 // Short, original listening cues, never source-song names.
 export const studyMoods={
  Jazz:['輕快・街角','苦甜・酒吧','緊張・樓梯'],

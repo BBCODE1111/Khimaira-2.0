@@ -43,3 +43,56 @@
 
 #ml-mute {min-height:44px;min-width:118px;align-self:end;}
 #ml-mute[aria-pressed="true"] {background:#634239;color:#fff;border-color:#cd9b75;}
+
+/* Alpha 8: one compact editor surface, with secondary controls in popovers. */
+:root{--control-height:40px}
+button,select,input[type=number],summary,.file-button{font-family:Arial,sans-serif;font-size:12px;letter-spacing:.045em}
+button,select,input[type=number],summary{min-height:var(--control-height)}
+button:disabled{opacity:.35!important;cursor:not-allowed!important}
+button.ghost{background:transparent;border-color:transparent}
+.melody-workspace{padding:24px!important;min-width:0}
+.melody-workspace .section-label{align-items:center;margin-bottom:8px}
+.melody-workspace .section-label button{padding:0 12px}
+.melody-upload{flex-wrap:nowrap;gap:8px}
+.melody-upload>*{flex:0 0 auto;min-width:0}
+.melody-upload #ml-settings-button{margin-left:auto;font-size:11px}
+.melody-workspace .file-button,.project-controls .file-button{height:var(--control-height);display:inline-flex;align-items:center;justify-content:center;position:relative;box-sizing:border-box;padding:0 12px;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.demo-menu{position:relative;margin:0!important}.demo-menu summary{display:flex;align-items:center;cursor:pointer;padding:0 12px;border:1px solid var(--line);border-radius:4px;list-style:none}
+.demo-menu>div{position:absolute;top:100%;left:0;background:#122b3c;padding:8px;z-index:30;display:flex;gap:8px}
+.melody-workspace #ml-status{margin:8px 0;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.roll-tools{top:0;position:relative;gap:5px;align-items:end;margin:0;padding:6px;overflow-x:auto;z-index:1}
+.roll-tools button{min-height:40px;padding:0 10px;flex:0 0 auto}
+.roll-tools label{font-size:9px;display:flex;flex-direction:column;gap:2px;flex:0 0 auto}.roll-tools select{min-width:64px;min-height:30px;padding:3px}
+.melody-roll-scroll{height:440px;margin:0;max-width:100%}
+#ml-roll-selection{margin:7px 0;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.melody-workspace details summary{display:flex;align-items:center;cursor:pointer;font-size:11px}
+.melody-workspace .melody-mix{margin:0;gap:12px}.melody-mix label{min-width:85px}.melody-mix input[type=range]{max-width:160px}
+.melody-compare{padding:12px 0;margin:8px 0;border:0;background:none}.melody-compare strong{display:block;font-size:10px;margin-bottom:8px}
+.melody-compare [role=group]{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}.melody-compare button{flex:0 0 auto;min-height:40px;font-size:11px}
+.melody-audit{font-size:11px;margin:8px 0 0;padding:8px 12px}
+[popover]{background:#102638;color:#e4edf1;border:1px solid #607e8d;border-radius:8px;padding:24px;max-width:min(560px,90vw);max-height:80vh;overflow:auto;box-sizing:border-box;font:13px/1.7 Arial,sans-serif}
+[popover]::backdrop{background:#00101a55}[popover] h3{font:600 14px Arial,sans-serif;letter-spacing:.12em}[popover] label{display:flex;align-items:center;gap:8px;margin:12px 0}[popover] button{margin:4px}
+#ml-more .roll-toolbar{margin:0}.project-controls{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:12px}.project-controls label{font-size:11px}
+#status{position:fixed!important;bottom:85px!important;left:50%!important;right:auto!important;top:auto!important;transform:translateX(-50%);max-width:90vw;width:max-content;box-sizing:border-box;z-index:1000;margin:0!important;pointer-events:none;white-space:normal}
+#status:empty{display:none}.compact-chords{display:none}.grid{mask-image:linear-gradient(to right,black 94%,transparent)}
+@media(max-width:600px){
+ :root{--control-height:44px}.workflow{display:none!important}.melody-workspace{padding:12px!important}
+ .melody-upload{flex-wrap:wrap;gap:6px}.melody-upload>*{flex:0 0 auto;min-width:0}.melody-upload #ml-settings-button{flex:1 0 100%;margin:0;min-height:36px}#ml-remove{margin-left:auto;font-size:10px;padding:0 8px}
+ .roll-tools button{min-height:44px;padding:0 10px}.roll-tools{top:0;gap:4px}.roll-tools select{min-height:32px}
+ .melody-roll-scroll{height:55vh;min-height:420px}.roll-tools label{flex:0 0 auto}.melody-compare button{min-height:44px}
+ .score.editor-visible:not(.expanded){padding:0 12px!important;min-height:44px!important;max-height:44px!important;overflow:visible}
+ .score.editor-visible .compact-chords{display:block;width:100%;height:44px;text-align:left;background:transparent;border:0;color:inherit}
+ .score.editor-visible:not(.expanded)>.sectionhead,.score.editor-visible:not(.expanded)>.score-hint,.score.editor-visible:not(.expanded)>#grid{display:none!important}
+ .score-actions button,.bar-cue{min-height:44px!important}.melody-mix #ml-basic{width:auto}
+ #status{bottom:76px!important;font-size:12px}.project-controls{padding:16px!important}
+}
+/* Match the existing palette while using a single control face and height. */
+.melody-workspace button,.melody-workspace summary,.project-controls button,.project-controls .file-button,[popover] button{font-family:Arial,sans-serif!important;font-size:11px!important;font-weight:600!important;letter-spacing:.04em!important;min-height:var(--control-height)}
+.melody-workspace button:not(.primary):not(.ghost),.project-controls button{background-image:none!important;background-color:#263f4f!important;box-shadow:none!important;border:1px solid #6d8795!important}
+.melody-workspace button[aria-pressed=true]{background-color:#44667c!important;border-color:#c7eaff!important}
+.melody-workspace .file-button{color:#edf5f8!important;background:#263f4f!important}
+.roll-tools button{min-width:40px}.roll-tools{scrollbar-width:thin}.section-label>.ghost{margin-left:auto}
+@media(max-width:600px){.melody-upload #ml-settings-button{flex:1 0 100%}.melody-workspace .section-label{margin-bottom:4px}}
+.roll-tools{position:sticky;top:var(--score-height,227px);z-index:19}
+#melodyWorkspace{scroll-margin-top:calc(var(--score-height,227px) + 12px)}
+@media(max-width:600px){.roll-tools{top:var(--score-height,44px)}}

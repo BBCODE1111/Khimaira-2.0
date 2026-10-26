@@ -1,4 +1,4 @@
-import {estimateTempo,inferKeys} from './analysis.js?v=2.0.0-alpha.7';
+import {estimateTempo,inferKeys} from './analysis.js?v=2.0.0-alpha.9';
 // File labels are source metadata, never acoustic ground truth. Show their provenance.
 export function sourceHints(name){
  const text=name.replace(/\.[^.]+$/,'');

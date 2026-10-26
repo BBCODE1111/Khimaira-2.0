@@ -8,16 +8,16 @@ import {sampleAttackOffset} from '../dist/piano.js';
 import {encodeAuditedMidi} from '../dist/export.js';import {parseMidi} from '../dist/midi.js';
 const basic=['American pop','Rock','Jazz','Bossa nova','House','Classical','Lo-fi hip-hop','Ambient'];
 const roots=[0,9,5,7,0,9,5,7,0];
-test('the original on-beat phrase establishes C Am F G with a final G-to-C arrival, in every basic genre and key',()=>{
+test('the phrase core remains transposition-equivariant while genre harmony may substitute it',()=>{
  for(let key=0;key<12;key++)for(const style of basic){
   const melody=demoMelody().map(n=>({...n,pitch:n.pitch+key})),r=arrangeMelody(melody,{style,key:{root:key,mode:'major'}});
-  assert.deepEqual(r.segments.map(s=>parse(s.symbol).root),roots.map(n=>(n+key)%12),`${style} ${key}`);
+  assert.deepEqual(r.segments.map(s=>parse(s.core||s.symbol).root),roots.map(n=>(n+key)%12),`${style} ${key}`);
   assert.deepEqual(r.segments.map(s=>s.start),[0,4,8,12,16,20,24,28,30]);
  }
 });
-test('genre variation changes colors without destroying the melody core or creating half-bar chord churn',()=>{
+test('genre variation retains a traceable melody core without half-bar chord churn',()=>{
  for(const style of basic)for(let seed=0;seed<5;seed++){
-  const r=arrangeMelody(demoMelody(),{style,seed});assert.deepEqual(r.segments.map(s=>parse(s.symbol).root),roots);assert.equal(r.segments.length,9);
+  const r=arrangeMelody(demoMelody(),{style,seed});assert.deepEqual(r.segments.map(s=>parse(s.core||s.symbol).root),roots);assert.equal(r.segments.length,9);
  }
 });
 test('all eight basic arrangements have audible bar-one anchors and retain distinct genre rhythm, with zero discarded notes on the fixture',()=>{
@@ -43,18 +43,18 @@ test('sample lead-in is measured from audio data, bounded, and silence is not mi
  const buffer={sampleRate:44100,getChannelData:()=>data},offset=sampleAttackOffset(buffer);assert.ok(offset>.013&&offset<.015);
  assert.equal(sampleAttackOffset({sampleRate:44100,getChannelData:()=>new Float32Array(4410)}),0);
 });
-test('all 48 retained styles can arrange the baseline melody without changing its harmonic roots or failing export',()=>{
+test('all 48 retained styles can arrange the baseline melody while retaining a traceable core or failing export',()=>{
  const melody=demoMelody();
  for(const [style,cfg] of Object.entries(styles)){
   const h=arrangeMelody(melody,{style}),r=renderProtected(chartFromSegments(h.segments),cfg.pattern,{followMelody:true,policy:'musical',voicing:cfg.voicing,human:0},melody);
-  assert.deepEqual(h.segments.map(s=>parse(s.symbol).root),roots,style);assert.ok(r.notes.length,style);assert.equal(auditHarmony(melody,r.accompaniment,{policy:'musical'}).length,0,style);
+  assert.deepEqual(h.segments.map(s=>parse(s.core||s.symbol).root),roots,style);assert.ok(r.notes.length,style);assert.equal(auditHarmony(melody,r.accompaniment,{policy:'musical'}).length,0,style);
   assert.ok(encodeAuditedMidi({melody,accompaniment:r.accompaniment,policy:'musical',includeMelody:false}).length,style);
  }
 });
 test('audio-like early onsets retain the same harmonic function, while real performed tails still respect exact melody timing',()=>{
  const melody=demoMelody().map((n,i)=>({...n,start:i?Math.max(0,n.start-.05):0,end:n.end+.02}));
  for(const style of basic){
-  const h=arrangeMelody(melody,{style});assert.deepEqual(h.segments.map(s=>parse(s.symbol).root),roots,style);
+  const h=arrangeMelody(melody,{style});assert.deepEqual(h.segments.map(s=>parse(s.core||s.symbol).root),roots,style);
   const cfg=styles[style],r=renderProtected(chartFromSegments(h.segments),cfg.pattern,{followMelody:true,policy:'musical',voicing:cfg.voicing,human:0,swing:0},melody);
   assert.equal(auditHarmony(melody,r.accompaniment,{policy:'musical'}).length,0,style);assert.equal(r.removed,0,style);
   for(let beat=0;beat<32;beat+=4)assert.ok(r.accompaniment.filter(n=>n.start<=beat+1e-7&&n.end>beat+.1).length>=3,style+' audio downbeat '+beat);

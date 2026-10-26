@@ -11,10 +11,10 @@ export function generate(bars,{key=0,mode='major',style='Jazz',random=Math.rando
 // Fixed targets are approached in their own local key, without overwriting anchors.
 for(let i=0;i<out.length;i++){if(!out[i].locked)continue;const a=approach(out[i].symbol);if(i>=1&&!out[i-1].locked)out[i-1]={symbol:a[1],locked:false,reason:'V → '+out[i].symbol};if(i>=2&&!out[i-2].locked)out[i-2]={symbol:a[0],locked:false,reason:'ii → V → '+out[i].symbol};}return out;}
 export function pianoVoicing(symbol,previous=[]){const c=parse(symbol);if(!c)return [];const pcs=c.pcs;let best=null,score=Infinity;for(let inv=0;inv<pcs.length;inv++){let upper=pcs.slice(inv).concat(pcs.slice(0,inv)).map(n=>60+n);for(let i=1;i<upper.length;i++)while(upper[i]<=upper[i-1])upper[i]+=12;for(const oct of [-12,0]){const v=upper.map(n=>n+oct);if(v[0]<48||v.at(-1)>88)continue;const cost=v.reduce((s,n,i)=>s+Math.abs(n-(previous[i+1]??(58+i*4))),0);if(cost<score){score=cost;best=v;}}}return [36+c.bass,...(best||pcs.map(n=>60+n))];}
-export {performance as events} from './performance.js?v=2.0.0-alpha.7';
+export {performance as events} from './performance.js?v=2.0.0-alpha.9';
 const tuning=[40,45,50,55,59,64];
 export function guitarShapes(symbol){const c=parse(symbol);if(!c)return [];let all=[];for(let start=0;start<=12;start++){const opts=tuning.map(t=>[-1,...Array.from({length:5},(_,i)=>start+i).filter(f=>f<=15&&c.pcs.includes(mod(t+f)))]);const walk=(arr,s)=>{if(s===6){const notes=arr.flatMap((f,i)=>f<0?[]:[tuning[i]+f]);if(notes.length<3||mod(notes[0])!==c.bass)return;const set=new Set(notes.map(mod));if(c.pcs.some(p=>!set.has(p)))return;const fretted=arr.filter(f=>f>0);if(fretted.length>4&&new Set(fretted).size>3)return;const span=Math.max(...fretted)-Math.min(...fretted);if(span>3)return;all.push({frets:arr,score:span*3+arr.filter(f=>f<0).length+start*.15});return;}for(const f of opts[s])walk([...arr,f],s+1);};walk([],0);}const seen=new Set;return all.sort((a,b)=>a.score-b.score).filter(x=>{const k=x.frets.join();if(seen.has(k))return false;seen.add(k);return true;}).filter((x,i,a)=>i===0||Math.abs(Math.max(...x.frets)-Math.max(...a[0].frets))>=3).slice(0,3);}
-export {scaleOptions as scales} from './scale-library.js?v=2.0.0-alpha.7';
+export {scaleOptions as scales} from './scale-library.js?v=2.0.0-alpha.9';
 export function midiBytes(notes,totalBeats){const ppq=480,ev=[],quantized=[],lastNote=new Map();
 // Quantize before pairing events: sub-tick notes must not turn into off-before-on pairs.
 for(const n of [...notes].sort((a,b)=>a.beat-b.beat||a.note-b.note)){const start=Math.round(n.beat*ppq),end=Math.max(start+1,Math.round((n.beat+n.duration)*ppq)),velocity=Math.round(n.velocity*100),previous=lastNote.get(n.note);
@@ -24,3 +24,10 @@ const q={note:n.note,start,end,velocity};lastNote.set(n.note,q);quantized.push(q
 quantized.forEach(n=>{ev.push({tick:n.start,data:[0x90,n.note,n.velocity]});ev.push({tick:n.end,data:[0x80,n.note,0]});});ev.sort((a,b)=>a.tick-b.tick||a.data[0]-b.data[0]);const vlq=n=>{let a=[n&127];while(n>>=7)a.unshift((n&127)|128);return a;};let track=[0,0xc0,0],last=0;for(const e of ev){track.push(...vlq(e.tick-last),...e.data);last=e.tick;}track.push(...vlq(Math.max(last,totalBeats*ppq)-last),255,47,0);const n=track.length;return new Uint8Array([77,84,104,100,0,0,0,6,0,0,0,1,1,224,77,84,114,107,(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255,...track]);}
 
 export function chordTones(symbol){const c=parse(symbol);if(!c)return [];const letters=['C','D','E','F','G','A','B'],naturals=[0,2,4,5,7,9,11],base=letters.indexOf(c.rootName[0]);const degrees={0:0,1:1,2:1,3:2,4:2,5:3,6:4,7:4,8:4,9:5,10:6,11:6,13:1,14:1,15:1,17:3,18:3,20:5,21:5};return c.intervals.map(interval=>{let degree=degrees[interval]??0;if(c.q==='dim7'&&interval===9)degree=6;const letter=(base+degree)%7;let delta=mod(c.root+interval)-naturals[letter];while(delta>6)delta-=12;while(delta< -6)delta+=12;return letters[letter]+(delta>0?'#'.repeat(delta):'b'.repeat(-delta));});}
+
+export function pitchName(pitch,key={root:0,mode:'major'},octave=false){
+ const major=mod(key.root+(key.mode==='minor'?3:0));
+ const sharp=[7,2,9,4,11,6].includes(major);
+ return (major===6?['C','C#','D','D#','E','E#','F#','G','G#','A','A#','B']:sharp?['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']:names)[mod(pitch)]+(octave?Math.floor(pitch/12)-1:'');
+}
+export function spellChord(symbol,key){return symbol.replace(/([A-G][#b]?)/g,t=>pitchName(pc(t),key));}

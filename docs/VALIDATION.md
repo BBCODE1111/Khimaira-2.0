@@ -1,3 +1,5 @@
+> Current revision: [alpha.8 beta fixes](BETA-20261026.md). Older entries below describe their historical versions; strict all-note/core-only and accompaniment-only limitations have changed.
+
 # Tempo synchronization and melody mute · 2.0.0-alpha.7
 
 118 automated tests pass. Regressions cover confirmed audio/MIDI/manual/demo beat and pitch preservation through 108 → 72 → 144 → 90 → 108 BPM, unchanged eight-bar duration in beats, retained note-edit undo, pre-confirmation audio calibration, source-audio audition fallback at another tempo, resumed transport, invalid BPM rejection, and instant melody-bus mute/unmute without stopping harmony or overwriting volume.

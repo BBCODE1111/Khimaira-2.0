@@ -1,3 +1,5 @@
+> Current revision: [alpha.8 beta fixes](BETA-20261026.md). Older entries below describe their historical versions; strict all-note/core-only and accompaniment-only limitations have changed.
+
 # Architecture · Alpha 6
 
 The workbench uses native ES modules; the audio transcription worker uses a bundled Basic Pitch / TensorFlow runtime. There is no server-side audio processing.

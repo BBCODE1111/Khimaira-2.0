@@ -143,13 +143,14 @@ function trackChunk(name, events) {
   }
   data.push(0, 0xff, 0x2f, 0); return chunk('MTrk', data);
 }
-export function encodeMidi({ melody = [], accompaniment = [], tempoMap = [{ beat: 0, bpm: 120 }], meter = { numerator: 4, denominator: 4 }, includeMelody = true }) {
+export function encodeMidi({ melody = [], accompaniment = [], tempoMap = [{ beat: 0, bpm: 120 }], meter = { numerator: 4, denominator: 4 }, includeMelody = true, separateBass = false, chordMarkers = [] }) {
   const ppq = 960;
   const tempos = normalizeTempoMap(tempoMap).map(t => {
     const us = clip(Math.round(60000000 / t.bpm), 1, 0xffffff);
     return { tick: Math.round(t.beat * ppq), order: 0, bytes: [0xff, 0x51, 3, us >> 16, (us >> 8) & 255, us & 255] };
   });
   tempos.push({ tick: 0, order: 1, bytes: [0xff, 0x58, 4, meter.numerator, Math.log2(meter.denominator), 24, 8] });
+  for(const c of chordMarkers){const data=[...utf8.encode(c.symbol)];tempos.push({tick:Math.round(c.start*ppq),order:2,bytes:[0xff,6,...vlqBytes(data.length),...data]});}
   const makeNotes = (notes, channel, name) => {
     const events = [];
     for (const note of notes) {
@@ -160,5 +161,5 @@ export function encodeMidi({ melody = [], accompaniment = [], tempoMap = [{ beat
     }
     return trackChunk(name, events);
   };
-  return new Uint8Array([...chunk('MThd', [...be16(1), ...be16(includeMelody?3:2), ...be16(ppq)]), ...trackChunk('KHIMAIRA tempo', tempos), ...(includeMelody?makeNotes(melody, 0, 'Melody'):[]), ...makeNotes(accompaniment, 1, 'KHIMAIRA harmony')]);
+  return new Uint8Array([...chunk('MThd', [...be16(1), ...be16((includeMelody?3:2)+(separateBass?1:0)), ...be16(ppq)]), ...trackChunk('KHIMAIRA tempo', tempos), ...(includeMelody&&!separateBass?makeNotes(melody, 0, 'Melody'):[]), ...(separateBass?makeNotes(accompaniment.filter(n=>n.role==='bass'),2,'KHIMAIRA bass'):[]), ...makeNotes(separateBass?accompaniment.filter(n=>n.role!=='bass'):accompaniment, 1, 'KHIMAIRA harmony'), ...(includeMelody&&separateBass?makeNotes(melody,0,'Melody'):[])]);
 }

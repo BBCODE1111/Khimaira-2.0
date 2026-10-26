@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {transformNote, createNote, NoteHistory, MIN_NOTE_BEATS} from '../dist/note-edit.js';
+import {transformNote, createNote, NoteHistory, MIN_NOTE_BEATS, quantizeNotes} from '../dist/note-edit.js';
 import {demoMelody, harmonize, auditHarmony, validateMelody} from '../dist/harmony.js';
 import {chartFromSegments, protectChart, renderProtected} from '../dist/fusion.js';
 import {encodeAuditedMidi} from '../dist/export.js';
@@ -44,4 +44,34 @@ test('moving across bars, lengthening and adding chromatic melody notes re-prote
  assert.equal(auditHarmony(edited,result.accompaniment).length,0);
  const midi=parseMidi(encodeAuditedMidi({melody:edited,accompaniment:result.accompaniment}));
  assert.equal(midi.tracks[0].notes.length,33);assert.ok(midi.tracks[0].notes.some(n=>n.pitch===before[0].pitch+1&&Math.abs(n.start-4.25)<1e-6));
+});
+
+test('quantize floors each onset independently, retaining duration and metadata',()=>{
+ const notes=[{...original,start:.24,end:.89},{...original,start:.26,end:.91},{...original,start:.5,end:1.15}];
+ const before=structuredClone(notes), result=quantizeNotes(notes,.25);
+ assert.deepEqual(result.map(n=>n.start),[0,.25,.5]);
+ result.forEach((n,i)=>{near(n.end-n.start,.65);assert.equal(n.pitch,notes[i].pitch);assert.equal(n.velocity,notes[i].velocity);assert.equal(n.confidence,notes[i].confidence);});
+ assert.deepEqual(notes,before);validateMelody(result);
+});
+test('quantize supports selected notes, FREE, triplets and stable grid boundaries',()=>{
+ const notes=[{...original,start:.24,end:.89},{...original,start:.49,end:1.14}];
+ assert.deepEqual(quantizeNotes(notes,.25,[1])[0],notes[0]);
+ assert.equal(quantizeNotes(notes,.25,[1])[1].start,.25);
+ assert.deepEqual(quantizeNotes(notes,0),notes);
+ for(const step of [1,.5,1/3,.25,.125]){
+  for(const start of [0,step,step*3,step*87,512-step]){
+   const note={...original,start,end:start+.01};
+   const result=quantizeNotes([note],step)[0];
+   assert.ok(result.start<=start+1e-12);near(result.end-result.start,.01);
+   near(result.start/step,Math.round(result.start/step));
+   assert.deepEqual(quantizeNotes([result],step),[result]);
+  }
+ }
+ assert.equal(quantizeNotes([{...original,start:1-1e-9}],.25)[0].start,.75);
+ assert.throws(()=>quantizeNotes(notes,NaN));assert.throws(()=>quantizeNotes(notes,-1));
+});
+test('quantize is one undoable edit and redo restores the exact result',()=>{
+ const h=new NoteHistory(),notes=[original];h.record(notes);
+ const result=quantizeNotes(notes,.25),restored=h.undo(result);
+ assert.deepEqual(restored,notes);assert.deepEqual(h.redo(restored),result);
 });

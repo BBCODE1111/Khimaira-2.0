@@ -1,6 +1,6 @@
-import { parse } from './engine/music.js?v=2.0.0-alpha.7';
-import { performance } from './engine/performance.js?v=2.0.0-alpha.7';
-import { mod, noteNames } from './analysis.js?v=2.0.0-alpha.7';
+import { parse } from './engine/music.js?v=2.0.0-alpha.9';
+import { performance } from './engine/performance.js?v=2.0.0-alpha.9';
+import { mod, noteNames } from './analysis.js?v=2.0.0-alpha.9';
 
 export const styles = {
   basic: { label: '基本和弦', pattern: 'sustain', qualities: ['', 'm', 'sus2', 'sus4'], voicing: 'close', description: '先建立清楚的三和弦與穩定長音。' },
@@ -16,7 +16,19 @@ export const styles = {
 export const safeIntervals = new Set([0, 3, 4, 5, 7, 8, 9]);
 export const overlaps = (a, b) => Math.min(a.end, b.end) - Math.max(a.start, b.start) > 1e-7;
 export const musicalIntervals = new Set([0,2,3,4,5,7,8,9,10]);
-export const compatible = (pitch, melodyPitch, policy='strict') => (policy==='musical'?musicalIntervals:safeIntervals).has(mod(pitch - melodyPitch));
+// Register and harmonic context matter: a chord's own tritone is consonant
+// with its function; a remote major seventh is not a close minor ninth.
+export function compatible(pitch, melodyPitch, policy='strict', chord=null) {
+ const interval=mod(pitch-melodyPitch);
+ if(policy!=='musical')return safeIntervals.has(interval);
+ const pcs=typeof chord==='string'?parse(chord)?.pcs:chord?.pcs;
+ if(interval===6)return !!pcs?.includes(mod(pitch))&&pcs.includes(mod(melodyPitch));
+ if(interval===11)return pitch<=melodyPitch-13;
+ return musicalIntervals.has(interval);
+}
+export function chordCompatible(chord,note,policy='musical') {
+ return chord.pcs.every(pc=>compatible(36+pc,note.pitch,policy,chord));
+}
 export function validateMelody(notes) {
   if (!notes.length) throw Error('請先匯入旋律或載入範例。');
   if (notes.length > 2000) throw Error('第一版最多 2,000 個旋律音，請先截成較短片段。');
@@ -34,14 +46,14 @@ function candidatePool(style) {
 }
 function candidatesFor(start, end, melody, pool, policy) {
   const notes = melody.filter(n => overlaps(n, { start, end }));
-  return pool.filter(c => c.pcs.every(p => notes.every(n => compatible(p, n.pitch, policy))));
+  return pool.filter(c => c.pcs.every(p => notes.every(n => (policy==='musical'?musicalIntervals:safeIntervals).has(mod(p-n.pitch)))));
 }
 
-export function auditHarmony(melody, accompaniment, {policy='strict'}={}) {
+export function auditHarmony(melody, accompaniment, {policy='strict',chords=[]}={}) {
   const conflicts = [];
   for (const h of accompaniment) for (let i = 0; i < melody.length; i++) {
     const m = melody[i];
-    if (overlaps(h, m) && !compatible(h.pitch, m.pitch, policy)) conflicts.push({ melodyIndex: i, melodyPitch: m.pitch, harmonyPitch: h.pitch, start: Math.max(m.start, h.start), end: Math.min(m.end, h.end), interval: mod(h.pitch - m.pitch) });
+    if (overlaps(h, m) && !compatible(h.pitch, m.pitch, policy, h.chord||chords.find(c=>h.start>=c.start-1e-7&&h.start<c.end-1e-7)?.symbol)) conflicts.push({ melodyIndex: i, melodyPitch: m.pitch, harmonyPitch: h.pitch, start: Math.max(m.start, h.start), end: Math.min(m.end, h.end), interval: mod(h.pitch - m.pitch) });
   }
   return conflicts;
 }

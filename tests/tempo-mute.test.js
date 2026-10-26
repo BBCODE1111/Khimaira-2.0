@@ -37,3 +37,15 @@ test('player mix mutes and restores an already sounding melody bus without touch
  const p=new MelodyPlayer(),melody=[],harmony=[];p.context={currentTime:3};p.playing=true;p.melodyBus={gain:{setTargetAtTime(...a){melody.push(a);}}};p.piano={master:{gain:{setTargetAtTime(...a){harmony.push(a);}}}};
  p.setMix(0,1);p.setMix(.35,1);assert.deepEqual(melody,[[0,3,.015],[.35,3,.015]]);assert.deepEqual(harmony,[[.68,3,.015],[.68,3,.015]]);assert.equal(p.playing,true);
 });
+
+test('melody transport reports the start beat immediately without an unsolicited count-in',async()=>{
+ const p=new MelodyPlayer(),ticks=[];
+ p.context={currentTime:0};p.unlock=async()=>p.context;p.setMix=()=>{};
+ try{
+  await p.play({melody:[],accompaniment:[],tempoMap:[{beat:0,bpm:120}],totalBeats:16,startBeat:0,onTick:beat=>ticks.push(beat)});
+  assert.equal(ticks[0],0);p.context.currentTime=.56;p.pump();assert.ok(Math.abs(ticks.at(-1)-1)<1e-8);
+  p.stop();p.context.currentTime=3;
+  await p.play({melody:[],accompaniment:[],tempoMap:[{beat:0,bpm:120}],totalBeats:16,startBeat:0,onTick:beat=>ticks.push(beat)});
+  assert.equal(ticks.at(-1),0);
+ }finally{p.stop();}
+});

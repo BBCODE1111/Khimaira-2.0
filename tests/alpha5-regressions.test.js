@@ -47,7 +47,7 @@ test('harmony-only MIDI physically omits the melody track but keeps tempo, meter
  const bytes=encodeAuditedMidi({includeMelody:false,melody,accompaniment:r.accompaniment,tempoMap,meter});
  assert.equal(new DataView(bytes.buffer).getUint16(10),2); // Conductor + harmony, no empty melody track.
  const decoded=parseMidi(bytes);assert.equal(decoded.tracks.length,1);assert.equal(decoded.tracks[0].channel,1);assert.equal(decoded.tracks[0].notes.length,r.accompaniment.length);assert.deepEqual(decoded.meter,{beat:0,...meter});assert.equal(decoded.tempoMap.length,2);assert.equal(decoded.tempoMap[0].bpm,80);
- assert.throws(()=>encodeAuditedMidi({includeMelody:false,melody:[{pitch:60,start:.0002,end:.0003}],accompaniment:[{pitch:61,start:.0004,end:.0005}]}),/取整/);
+ assert.throws(()=>encodeAuditedMidi({includeMelody:false,melody:[{pitch:60,start:.0002,end:.0003}],accompaniment:[{pitch:61,start:.0004,end:.0005}]}),/MIDI tick|timing/);
 });
 test('harmony-only rounding stays inside audible bounds against an unquantized reference audio track',()=>{
  const melody=[{pitch:61,start:1.0002,end:2}],accompaniment=[{pitch:60,start:0,end:1.0002}];

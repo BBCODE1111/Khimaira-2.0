@@ -1,0 +1,51 @@
+[
+  {
+    "melody": "bebop-8ths_180.mid",
+    "distinctCharts": 9,
+    "unintendedEmptyBars": 0,
+    "minAccompanimentNotes": 12,
+    "maxOmittedEvents": 0
+  },
+  {
+    "melody": "low-register_96.mid",
+    "distinctCharts": 11,
+    "unintendedEmptyBars": 0,
+    "minAccompanimentNotes": 12,
+    "maxOmittedEvents": 0
+  },
+  {
+    "melody": "minor-ballad-chromatic_70.mid",
+    "distinctCharts": 8,
+    "unintendedEmptyBars": 0,
+    "minAccompanimentNotes": 27,
+    "maxOmittedEvents": 0
+  },
+  {
+    "melody": "pop-sync-pickup_92.mid",
+    "distinctCharts": 11,
+    "unintendedEmptyBars": 0,
+    "minAccompanimentNotes": 24,
+    "maxOmittedEvents": 0
+  },
+  {
+    "melody": "rock-pent_128.mid",
+    "distinctCharts": 8,
+    "unintendedEmptyBars": 0,
+    "minAccompanimentNotes": 16,
+    "maxOmittedEvents": 3
+  },
+  {
+    "melody": "waltz-3-4_132.mid",
+    "distinctCharts": 11,
+    "unintendedEmptyBars": 0,
+    "minAccompanimentNotes": 43,
+    "maxOmittedEvents": 0
+  },
+  {
+    "melody": "demo",
+    "distinctCharts": 11,
+    "unintendedEmptyBars": 0,
+    "minAccompanimentNotes": 28,
+    "maxOmittedEvents": 0
+  }
+]

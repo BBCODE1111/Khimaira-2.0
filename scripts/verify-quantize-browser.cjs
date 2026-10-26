@@ -1,0 +1,62 @@
+// Run with Playwright available in NODE_PATH; BASE_URL can target the published site.
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs/promises');
+(async()=>{
+ const browser=await chromium.launch({headless:true,channel:'chrome'});
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(process.env.BASE_URL||'http://localhost:5180');
+ const project=JSON.parse(await fs.readFile('docs/qa-20261026/project.json','utf8'));
+ project.melody.notes=project.melody.notes.map((n,i)=>({...n,start:n.start+(i%2?.13:.24),end:n.end+(i%2?.13:.24)}));
+ const original=structuredClone(project.melody.notes);
+ await page.locator('#loadProject').setInputFiles({name:'quantize.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(project))});
+ await page.waitForFunction(()=>document.querySelectorAll('#ml-roll [data-note]').length===32);
+ const notes=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('khimaira-v2-project')).melody.notes);
+ await page.locator('#ml-quantize').click();
+ let result=await notes();assert.equal(result.length,32);
+ result.forEach((n,i)=>{assert.equal(n.start,Math.floor(original[i].start/.25)*.25);assert.ok(Math.abs((n.end-n.start)-(original[i].end-original[i].start))<1e-9);assert.equal(n.velocity,original[i].velocity);});
+ await page.locator('#ml-undo').click();assert.deepEqual(await notes(),original);
+ // Selecting one note must leave the other imported onsets unchanged.
+ await page.locator('#ml-roll [data-note="1"]').focus();
+ await page.locator('#ml-quantize').click();result=await notes();
+ result.forEach((n,i)=>{if(i!==1)assert.deepEqual(n,original[i]);});
+ assert.equal(result[1].start,Math.floor(original[1].start/.25)*.25);
+ await page.locator('#ml-undo').click();
+ await page.locator('#ml-roll').focus();await page.keyboard.press('Escape');await page.keyboard.press('q');
+ result=await notes();result.forEach((n,i)=>assert.equal(n.start,Math.floor(original[i].start/.25)*.25));
+ await page.locator('#ml-snap').selectOption('0');assert.equal(await page.locator('#ml-quantize').isDisabled(),true);
+ await page.locator('#ml-snap').selectOption('.25');assert.equal(await page.locator('#ml-quantize').isEnabled(),true);
+ await page.evaluate(()=>scrollTo(0,0));
+ const beat=()=>page.evaluate(()=>Number(document.querySelector('#position').dataset.beat));
+ const playing=()=>page.waitForFunction(()=>document.querySelector('#play').getAttribute('aria-pressed')==='true',null,{timeout:20000});
+ await page.locator('.bar-cue').nth(2).click();
+ await page.locator('#play').click();await playing();assert.ok(await beat()<1);assert.equal(await page.locator('#play').textContent(),'PLAY');
+ await page.waitForFunction(()=>Number(document.querySelector('#position').dataset.beat)>1.5);
+ await page.locator('#stop').click();assert.equal(await page.locator('#play').getAttribute('aria-pressed'),'false');
+ await page.locator('#play').click();await playing();assert.ok(await beat()<1);
+ await page.waitForFunction(()=>Number(document.querySelector('#position').dataset.beat)>1.5);
+ await page.locator('#play').click();await playing();assert.ok(await beat()<1);
+ await page.keyboard.press('Space');assert.equal(await page.locator('#play').getAttribute('aria-pressed'),'false');
+ await page.keyboard.press('Space');await playing();assert.ok(await beat()<1);
+ await page.keyboard.press('Space');assert.equal(await page.locator('#play').getAttribute('aria-pressed'),'false');
+ // Input fields must retain native typing, not start playback.
+ await page.locator('#chartInput').focus();await page.keyboard.press('Space');assert.equal(await page.locator('#play').getAttribute('aria-pressed'),'false');
+ const icon=await page.locator('#play').evaluate(el=>{const s=getComputedStyle(el,'::before');return {content:s.content,mask:s.maskImage,width:s.width};});assert.equal(icon.content,'""');assert.match(icon.mask,/svg/);assert.equal(icon.width,'14px');
+ await page.evaluate(()=>scrollTo(0,document.querySelector('#melodyWorkspace').getBoundingClientRect().top+scrollY-document.querySelector('.score').getBoundingClientRect().height-12));
+ await page.waitForTimeout(2600);await page.screenshot({path:'docs/qa-20261026/quantize-desktop.png'});
+ // Chord-only transport also restarts instead of toggling PLAY into STOP.
+ await page.locator('#ml-remove').click();await page.evaluate(()=>scrollTo(0,0));
+ await page.locator('#play').click();await playing();await page.waitForFunction(()=>Number(document.querySelector('#position').dataset.beat)>1.5);
+ await page.locator('#play').click();await playing();assert.ok(await beat()<1);await page.locator('#stop').click();
+ const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ mobile.on('pageerror',e=>errors.push(e.message));await mobile.goto(process.env.BASE_URL||'http://localhost:5180');
+ await mobile.locator('.demo-menu summary').tap();await mobile.locator('#ml-demo').tap();
+ await mobile.locator('#ml-work').scrollIntoViewIfNeeded();
+ await mobile.locator('#ml-quantize').tap();assert.equal(await mobile.locator('#ml-quantize').isEnabled(),true);
+ assert.ok(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await mobile.waitForTimeout(2600);await mobile.screenshot({path:'docs/qa-20261026/quantize-mobile.png'});
+ assert.deepEqual(errors,[]);
+ console.log(JSON.stringify({url:page.url(),checks:['floor quantize all','selected only','duration and velocity','undo','Q shortcut','FREE disables Q','PLAY ignores cue and restarts','STOP','PLAY while playing restarts','Space toggle','Space in inputs','icons','chord-only restart','mobile Q and width'],errors},null,2));
+ await browser.close();
+})().catch(e=>{console.error(e);process.exit(1);});

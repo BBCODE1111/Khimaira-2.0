@@ -1,0 +1,2 @@
+Browser QA passed: defaults, retained preference, loop state, Roman degrees, transpose/undo, clipboard, key spelling, split MIDI, playback, desktop/mobile overflow and touch targets.
+Plugin bridge QA passed: initial state, blank bars, new settings, preview notes, split MIDI download.

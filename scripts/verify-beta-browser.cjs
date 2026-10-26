@@ -1,0 +1,38 @@
+// Run with Playwright available in NODE_PATH and the local server on port 5180.
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs/promises');
+const path=require('node:path');
+const {pathToFileURL}=require('node:url');
+(async()=>{
+ const {parseMidi}=await import(pathToFileURL(path.resolve('dist/midi.js')));
+ const browser=await chromium.launch({headless:true,channel:process.env.BROWSER_CHANNEL||'chrome'});
+ const errors=[],page=await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true});page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(process.env.BASE_URL||'http://localhost:5180');
+ await page.locator('.demo-menu summary').click();await page.locator('#ml-demo').click();
+ assert.equal(await page.locator('#ml-roll [data-note]').count(),32);
+ await page.locator('[data-compare-style="Jazz"]').click();assert.match(await page.locator('#grid').innerText(),/G7/);
+ await page.locator('.chord-event').first().click();await page.locator('#editorLock').click();
+ const locked=await page.locator('.chord-event').first().innerText();await page.locator('#generate').click();assert.equal(await page.locator('.chord-event').first().innerText(),locked);
+ await page.reload();assert.equal(await page.locator('#ml-roll [data-note]').count(),32);assert.equal(await page.locator('.chord-event').first().innerText(),locked);
+ await page.locator('#dockMidi').click();await page.locator('#includeMelody').check();
+ let downloading=page.waitForEvent('download');await page.locator('#midi').click();const midi=await downloading;await midi.saveAs('docs/qa-20261026/jazz-melody-bass-chords.mid');
+ const decoded=parseMidi(await fs.readFile('docs/qa-20261026/jazz-melody-bass-chords.mid'));
+ assert.deepEqual(decoded.tracks.map(t=>t.channel),[2,1,0]);assert.equal(decoded.tracks.find(t=>t.channel===0).notes.length,32);
+ await page.keyboard.press('Escape');
+ downloading=page.waitForEvent('download');await page.locator('#saveProject').click();const project=await downloading;await project.saveAs('docs/qa-20261026/project.json');
+ await page.locator('#loadProject').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from('{"format":"invalid"}')});await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('Unsupported'));assert.match(await page.locator('#status').innerText(),/Unsupported/);assert.equal(await page.locator('#ml-roll [data-note]').count(),32);
+ await page.locator('#ml-new').click();assert.equal(await page.locator('#ml-roll [data-note]').count(),0);
+ await page.locator('.melody-roll-scroll').scrollIntoViewIfNeeded();let box=await page.locator('.melody-roll-scroll').boundingBox();await page.mouse.click(box.x+180,box.y+240);
+ assert.equal(await page.locator('#ml-roll [data-note]').count(),1);await page.locator('#ml-undo').click();assert.equal(await page.locator('#ml-roll [data-note]').count(),0);await page.locator('#ml-redo').click();assert.equal(await page.locator('#ml-roll [data-note]').count(),1);
+ await page.locator('#loadProject').setInputFiles('docs/qa-20261026/project.json');await page.waitForFunction(()=>document.querySelectorAll('#ml-roll [data-note]').length===32);assert.equal(await page.locator('#ml-roll [data-note]').count(),32);
+ await page.locator('#countIn').check();await page.locator('#metronome').check();await page.locator('#play').click();await page.waitForFunction(()=>document.querySelector('#position').textContent.includes('COUNT-IN'),null,{timeout:15000});await page.waitForFunction(()=>document.querySelector('.roll-playhead')?.getAttribute('visibility')==='visible',null,{timeout:10000});await page.locator('#stop').click();assert.equal(await page.locator('.roll-playhead').getAttribute('visibility'),'hidden');
+ await page.evaluate(()=>window.scrollTo(0,document.querySelector('#melodyWorkspace').getBoundingClientRect().top+scrollY-document.querySelector('.score').getBoundingClientRect().height-12));await page.waitForTimeout(2600);await page.screenshot({path:'docs/qa-20261026/desktop.png'});
+ const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});mobile.on('pageerror',e=>errors.push(e.message));await mobile.goto(process.env.BASE_URL||'http://localhost:5180');
+ await mobile.locator('#ml-file').setInputFiles('tests/fixtures/beta-20261026/waltz-3-4_132.mid');await mobile.waitForFunction(()=>document.querySelectorAll('#ml-roll [data-note]').length>0);
+ assert.match(await mobile.locator('#ml-settings-button').innerText(),/3\/4/);assert.doesNotMatch(await mobile.locator('.roll-ruler').textContent(),/BAR 14/);
+ await mobile.locator('#ml-work').scrollIntoViewIfNeeded();await mobile.waitForTimeout(2600);
+ const sizes=await mobile.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth,roll:document.querySelector('.melody-roll-scroll').getBoundingClientRect().height,score:document.querySelector('.score').getBoundingClientRect().height}));console.log(sizes);assert.ok(sizes.width<=sizes.viewport);assert.ok(sizes.roll>=844*.55-2);assert.equal(sizes.score,44);
+ await mobile.locator('[data-roll-tool="draw"]').tap();box=await mobile.locator('.melody-roll-scroll').boundingBox();const count=await mobile.locator('#ml-roll [data-note]').count();await mobile.touchscreen.tap(box.x+180,box.y+140);assert.equal(await mobile.locator('#ml-roll [data-note]').count(),count+1);
+ await mobile.evaluate(()=>window.scrollTo(0,document.querySelector('#melodyWorkspace').getBoundingClientRect().top+scrollY-56));await mobile.waitForTimeout(2600);await mobile.screenshot({path:'docs/qa-20261026/mobile.png'});assert.deepEqual(errors,[]);console.log(JSON.stringify({browser:'Chrome',desktop:'1440×1000',mobile:'390×844',checks:['demo','Jazz','chord lock','autosave restore','three MIDI tracks','project files','invalid import','draw','undo/redo','count-in','click','playhead','3/4 MIDI','touch draw','mobile dimensions'],errors},null,2));await browser.close();
+})().catch(error=>{console.error(error);process.exit(1);});

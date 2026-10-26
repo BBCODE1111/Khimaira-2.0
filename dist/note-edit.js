@@ -54,3 +54,17 @@ export function transformSelection(notes, indices, options={}) {
 export function notesInBox(notes,{start,end,low,high}) {
   return notes.flatMap((n,i)=>n.end>Math.min(start,end)&&n.start<Math.max(start,end)&&n.pitch>=Math.min(low,high)&&n.pitch<=Math.max(low,high)?[i]:[]);
 }
+
+// Quantize onsets independently to the preceding grid; keep note lengths and metadata.
+export function quantizeNotes(notes, step, indices = notes.map((_, i) => i)) {
+  if (!Number.isFinite(step) || step < 0) throw Error('無效的量化格線。');
+  const chosen = new Set(indices);
+  return notes.map((note, i) => {
+    if (!step || !chosen.has(i)) return { ...note };
+    const position = note.start / step, nearest = Math.round(position);
+    // Imported triplets can land a few floating-point ulps below an exact grid line.
+    const grid = Math.abs(position - nearest) <= Number.EPSILON * 8 * Math.max(1, Math.abs(position)) ? nearest : Math.floor(position);
+    const start = Math.max(0, grid * step);
+    return { ...note, start, end: start + (note.end - note.start) };
+  });
+}
