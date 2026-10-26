@@ -1,8 +1,8 @@
-import {arrangeMelody,followMelodyRhythm,phraseNotes} from './melody-arranger.js?v=2.0.0-alpha.6';
-import { parse } from './music.js?v=2.0.0-alpha.6';
-import { styles as legacyStyles } from './style-engine.js?v=2.0.0-alpha.6';
-import { harmonize, auditHarmony, compatible, overlaps } from './harmony.js?v=2.0.0-alpha.6';
-import { performance, voicePlan } from './performance.js?v=2.0.0-alpha.6';
+import {arrangeMelody,followMelodyRhythm,phraseNotes} from './melody-arranger.js?v=2.0.0-alpha.7';
+import { parse } from './music.js?v=2.0.0-alpha.7';
+import { styles as legacyStyles } from './style-engine.js?v=2.0.0-alpha.7';
+import { harmonize, auditHarmony, compatible, overlaps } from './harmony.js?v=2.0.0-alpha.7';
+import { performance, voicePlan } from './performance.js?v=2.0.0-alpha.7';
 
 export const barLength = meter => (meter?.numerator || 4) * 4 / (meter?.denominator || 4);
 export function normalizeChart(chart, beats = 4) {

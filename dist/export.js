@@ -1,5 +1,5 @@
-import { encodeMidi, parseMidi } from './midi.js?v=2.0.0-alpha.6';
-import { auditHarmony } from './harmony.js?v=2.0.0-alpha.6';
+import { encodeMidi, parseMidi } from './midi.js?v=2.0.0-alpha.7';
+import { auditHarmony } from './harmony.js?v=2.0.0-alpha.7';
 
 // Check the file the DAW will actually receive, including one-tick minimum durations.
 export function encodeAuditedMidi(project) {

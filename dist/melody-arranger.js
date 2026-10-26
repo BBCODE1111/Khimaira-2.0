@@ -1,7 +1,7 @@
-import {parse} from './music.js?v=2.0.0-alpha.6';
-import {compatible,overlaps,harmonize,validateMelody} from './harmony.js?v=2.0.0-alpha.6';
-import {noteNames,mod} from './analysis.js?v=2.0.0-alpha.6';
-import {styles} from './style-engine.js?v=2.0.0-alpha.6';
+import {parse} from './music.js?v=2.0.0-alpha.7';
+import {compatible,overlaps,harmonize,validateMelody} from './harmony.js?v=2.0.0-alpha.7';
+import {noteNames,mod} from './analysis.js?v=2.0.0-alpha.7';
+import {styles} from './style-engine.js?v=2.0.0-alpha.7';
 
 // Establish harmonic function from the phrase first. Genre colors may decorate
 // this core; they must not replace it merely to make GENERATE look different.

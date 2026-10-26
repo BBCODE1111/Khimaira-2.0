@@ -1,5 +1,5 @@
-import { transformNote, createNote, transformSelection, notesInBox } from './note-edit.js?v=2.0.0-alpha.6';
-import { noteName } from './analysis.js?v=2.0.0-alpha.6';
+import { transformNote, createNote, transformSelection, notesInBox } from './note-edit.js?v=2.0.0-alpha.7';
+import { noteName } from './analysis.js?v=2.0.0-alpha.7';
 const ns = 'http://www.w3.org/2000/svg';
 const rounded = value => Number(value.toFixed(3));
 const element = (tag, attrs, text) => { const el = document.createElementNS(ns, tag); for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, value); if (text !== undefined) el.textContent = text; return el; };

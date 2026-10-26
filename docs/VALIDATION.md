@@ -1,3 +1,13 @@
+# Tempo synchronization and melody mute · 2.0.0-alpha.7
+
+118 automated tests pass. Regressions cover confirmed audio/MIDI/manual/demo beat and pitch preservation through 108 → 72 → 144 → 90 → 108 BPM, unchanged eight-bar duration in beats, retained note-edit undo, pre-confirmation audio calibration, source-audio audition fallback at another tempo, resumed transport, invalid BPM rejection, and instant melody-bus mute/unmute without stopping harmony or overwriting volume.
+
+Browser verification: import/decode the 32-note WAV at 108 BPM → confirm → audition original → change to 90 BPM while playing → change to 144 BPM through the lower transport BPM field. Both BPM controls synchronize, the entire note table and chord chart remain identical, and the phrase stays eight bars. Mute/unmute leaves transport running with an advancing playhead. No console errors in this flow.
+
+Confirmed tempo changes use recognized-note synthesis; this is not original-waveform time stretching. The original audio remains available at its calibrated source BPM. The existing accompaniment-only MIDI tests continue to pass.
+
+---
+
 # Basic phrase accompaniment · 2.0.0-alpha.6
 
 112 automated tests pass. New acceptance checks use the original eight-bar quarter-note melody: eight basic genres × 12 keys retain the inferred C–Am–F–G function and G–C cadence; five variations preserve roots; actual rendered notes support every bar downbeat and non-ambient strong beats without discarded attacks. Seven or more distinct rhythm/duration signatures remain. A changed melody changes harmony; dense phrases lower subdivision velocities. All 48 retained style definitions also pass melody-first baseline generation, rendering and harmony-only MIDI export. Shared-clock scheduling is checked through two loop cycles and a variable tempo map.

@@ -40,3 +40,6 @@
 .melody-compare strong{color:#e7d1a7;font-size:14px}.melody-compare p{font-size:12px;margin:8px 0}
 .melody-compare [role=group]{display:flex;flex-wrap:wrap;gap:8px}.melody-compare button{min-height:44px;padding:9px 15px}
 .melody-compare button[aria-pressed=true]{border-color:#f2d49a;background:#405a68;color:#fff}
+
+#ml-mute {min-height:44px;min-width:118px;align-self:end;}
+#ml-mute[aria-pressed="true"] {background:#634239;color:#fff;border-color:#cd9b75;}

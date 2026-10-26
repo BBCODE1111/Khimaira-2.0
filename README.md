@@ -1,6 +1,6 @@
 # KHIMAIRA 2.0 · Melody Lab
 
-旋律先行的和弦實驗室。**2.0.0-alpha.6，先驗證網頁，再開發 DAW 外掛。**
+旋律先行的和弦實驗室。**2.0.0-alpha.7，先驗證網頁，再開發 DAW 外掛。**
 
 - [開啟 2.0](https://bbcode1111.github.io/Khimaira-2.0/)
 - [保留的 1.0 網站](https://bbcode1111.github.io/Khimaira/)
@@ -105,3 +105,9 @@ python3 -m http.server 5180 --directory dist
 ## 重建音訊辨識模組
 
 `pnpm install --frozen-lockfile --ignore-scripts` 後執行 `pnpm build:transcriber`。依賴版本與 TensorFlow 覆寫由 `package.json`、`pnpm-workspace.yaml`、`pnpm-lock.yaml` 固定；產物放在 `dist/vendor/`，Pages 直接部署已提交的產物。`src/neural-runtime.js` 控制模型載入、推論與張量釋放；取消分析會終止 worker。
+
+## Tempo and melody mute · alpha 7
+
+After confirming an audio transcription, BPM changes preserve musical beat positions, note edits and bar count, matching MIDI and drawn melodies. Only the initial audio-review step reinterprets seconds to correct the detected beat grid. Playback tempo changes restart melody and accompaniment together from the selected bar. At a tempo different from the source, audition switches to the recognized notes to preserve pitch; original-waveform time stretching is not implemented, and original audition becomes available again at the calibrated source BPM.
+
+The separate **旋律 ON / MUTE** button changes only the melody bus, instantly during playback, preserving the chosen audition source and volume. MIDI export remains accompaniment-only.

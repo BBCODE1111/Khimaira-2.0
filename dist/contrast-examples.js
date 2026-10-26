@@ -1,4 +1,4 @@
-import {darkContrasts} from './dark-styles.js?v=2.0.0-alpha.6';
+import {darkContrasts} from './dark-styles.js?v=2.0.0-alpha.7';
 // Four original contrasting studies per style, in project tonic C.
 // Mood is a listening suggestion, not a claim about a tradition or a source song.
 // Order: bright / melancholy / dreamy / tense. Explicit modes prevent major/minor relabelling.
